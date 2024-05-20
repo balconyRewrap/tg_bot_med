@@ -1,23 +1,26 @@
 from enum import Enum
+from datetime import datetime
 
 
 class Questions(Enum):
     # Начало главной информации
-    Q1 = ("1. Дата анкетирования (день, месяц, год):", None),
+    Q1 = ("1. Дата анкетирования (день-месяц-год):", "Да", "Нет"),
+    Q1_1 = ("1_1. Введите дату анкетирования. Формат день-месяц-год, например, 01-12-2023", None),
     Q2 = ("2. Ф.И.О. пациента:", None),
-    Q3 = ("3. Пол:", None),
-    Q4 = ("4. Дата рождения (день, месяц, год):", None),
-    Q5 = ("5. Полных лет:", None),
+    Q3 = ("3. Пол (Муж или Жен):", None),
+    Q4 = ("4. Дата рождения. Формат день-месяц-год, например, 01-12-2023:", None),
+    Q5 = ("5. Вам полных лет:", "Да", "Нет"),
+    Q5_1 = ("5_1. Введите число вам полных лет:", None),
     Q6 = ("6. Медицинская организация:", None),
     Q7 = (
-        "7. Должность и Ф.И.О. медицинского работника, проводящего анкетирование и подготовку заключения по его результатам:",
-        None),
+        "7. Должность и Ф.И.О. медицинского работника, проводящего анкетирование и подготовку заключения по его "
+        "результатам:", None),
     # Конец главной информации
 
     # Начало conditions
     Q8 = (
-        "8. Говорил ли Вам врач когда-либо, что у Вас имеется гипертоническая болезнь (повышенное артериальное давление)?",
-        "Да", "Нет"),
+        "8. Говорил ли Вам врач когда-либо, что у Вас имеется гипертоническая болезнь (повышенное артериальное "
+        "давление)?", "Да", "Нет"),
     Q8_1 = ("8_1. Если «Да», то принимаете ли Вы препараты для снижения давления?", "Да", "Нет"),
     Q9 = ("9. Имеется ли у вас ишемическая болезнь сердца (стенокардия)?", "Да", "Нет"),
     Q10 = ("10. Имеется ли у вас цереброваскулярное заболевание (заболевание сосудов головного мозга)?", "Да", "Нет"),
@@ -128,10 +131,12 @@ class Questions(Enum):
 
 class QuestionsNumber(Enum):
     Q1 = "1."
+    Q1_1 = "1_1."
     Q2 = "2."
     Q3 = "3."
     Q4 = "4."
     Q5 = "5."
+    Q5_1 = "5_1."
     Q6 = "6."
     Q7 = "7."
     Q8 = "8."
@@ -178,385 +183,672 @@ class QuestionsNumber(Enum):
     Q42 = "42."
 
 
-# TODO: Заменить на получение сегодняшней даты
+def handle_start_end(message_text: str, question: int):
+    if message_text == "/start":
+        return "start", question
+    elif message_text == "назад":
+        return "назад", question
+    else:
+        return "нет", question
+
+
 def handle_q1(survey, message):
-    survey.survey_date = message.text
-    return Questions.Q2.value[0][0]
+    msg, num = handle_start_end(message.text, 1)
+    if not (msg == "нет"):
+        return msg, num
+    additional_info = message.text
+    if additional_info == "Да":
+        current_date = datetime.now()
+        formatted_date = current_date.strftime("%d-%m-%Y")
+        survey.survey_date = formatted_date
+        return Questions.Q2.value[0][0], 1
+    elif additional_info == "Нет":
+        survey.gender = message.text
+        return Questions.Q1_1.value[0][0], 1
+    else:
+        return "Неверный выбор", 1
+
+
+def handle_q1_1(survey, message):
+    msg, num = handle_start_end(message.text, 1)
+    if not (msg == "нет"):
+        return msg, num
+    try:
+        date = datetime.strptime(message.text, "%d-%m-%Y")
+        survey.survey_date = date
+        return Questions.Q2.value[0][0], 1
+    except ValueError:
+        return "Неправильная Дата Анкетирования", 1
 
 
 def handle_q2(survey, message):
+    msg, num = handle_start_end(message.text, 2)
+    if not (msg == "нет"):
+        return msg, num
     survey.patient_name = message.text
-    # return Questions.Q3.value[0][0]
-    return Questions.Q42.value[0][0]
+
+    return Questions.Q3.value[0][0], 2
 
 
 def handle_q3(survey, message):
-    survey.gender = message.text
-    return Questions.Q4.value[0][0]
+    msg, num = handle_start_end(message.text, 3)
+    if not (msg == "нет"):
+        return msg, num
+    if message.text == "Муж" or message.text == "Жен":
+        survey.gender = message.text
+        return Questions.Q4.value[0][0], 3
+    else:
+        return "Неправильный пол", 3
 
 
 def handle_q4(survey, message):
-    survey.birth_date = message.text
-    return Questions.Q5.value[0][0]
+    msg, num = handle_start_end(message.text, 4)
+    if not (msg == "нет"):
+        return msg, num
+    try:
+        date = datetime.strptime(message.text, "%d-%m-%Y")
+        survey.birth_date = date
+        survey_date = datetime.strptime(survey.survey_date, "%d-%m-%Y")
+
+        age = survey_date.year - survey.birth_date.year
+        if (survey.birth_date.month, survey_date.day) < (survey.birth_date.month, survey_date.day):
+            age -= 1
+        survey.age = age
+        return Questions.Q5.value[0][0], 4
+    except ValueError:
+        return "Неправильная Дата Рождения", 4
 
 
-# TODO: Заменить на сравнение сегодняшней даты и даты рождения
 def handle_q5(survey, message):
-    survey.age = message.text
-    return Questions.Q6.value[0][0]
+    msg, num = handle_start_end(message.text, 5)
+    if not (msg == "нет"):
+        return msg, num
+    additional_info = message.text
+    if additional_info == "Да":
+        return Questions.Q6.value[0][0], 5
+    elif additional_info == "Нет":
+        return Questions.Q5_1.value[0][0], 5
+    else:
+        return "Неверный выбор", 5
+
+
+def handle_q5_1(survey, message):
+    handle_start_end(message.text, 1)
+    try:
+        survey.age = int(message.text)
+        return Questions.Q6.value[0][0], 5
+    except ValueError:
+        return "Неправильное число", 5
 
 
 def handle_q6(survey, message):
+    msg, num = handle_start_end(message.text, 6)
+    if not (msg == "нет"):
+        return msg, num
     survey.medical_organization = message.text
-    return Questions.Q7.value[0][0]
+    return Questions.Q7.value[0][0], 6
 
 
 def handle_q7(survey, message):
+    msg, num = handle_start_end(message.text, 7)
+    if not (msg == "нет"):
+        return msg, num
     survey.doctor_name = message.text
-    return Questions.Q8.value[0][0]
+    return Questions.Q8.value[0][0], 7
 
 
 def handle_q8(survey, message):
+    msg, num = handle_start_end(message.text, 8)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("hypertension", True)
-        return Questions.Q8_1.value[0][0]
-    else:
+        return Questions.Q8_1.value[0][0], 8
+    elif additional_info == "Нет":
         survey.set_condition("hypertension", False)
-        return Questions.Q9.value[0][0]
+        return Questions.Q9.value[0][0], 8
+    else:
+        return "Неверный выбор", 8
 
 
 def handle_q8_1(survey, message):
+    msg, num = handle_start_end(message.text, 8)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("hypertension", True, True)
-    else:
+        return Questions.Q9.value[0][0], 8
+    elif additional_info == "Нет":
         survey.set_condition("hypertension", True, False)
-    return Questions.Q9.value[0][0]
+        return Questions.Q9.value[0][0], 8
+    else:
+        return "Неверный выбор", 8
 
 
 def handle_q9(survey, message):
+    msg, num = handle_start_end(message.text, 9)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("ischemic_heart_disease", True)
-    else:
+        return Questions.Q10.value[0][0], 9
+    elif additional_info == "Нет":
         survey.set_condition("ischemic_heart_disease", False)
-    return Questions.Q10.value[0][0]
+        return Questions.Q10.value[0][0], 9
+    else:
+        return "Неверный выбор", 9
 
 
 def handle_q10(survey, message):
+    msg, num = handle_start_end(message.text, 10)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("cerebrovascular_disease", True)
-    else:
+        return Questions.Q11.value[0][0], 10
+    elif additional_info == "Нет":
         survey.set_condition("cerebrovascular_disease", False)
-    return Questions.Q11.value[0][0]
+        return Questions.Q11.value[0][0], 10
+    else:
+        return "Неверный выбор", 10
 
 
 def handle_q11(survey, message):
+    msg, num = handle_start_end(message.text, 11)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("chronic_lung_disease", True)
-    else:
+        return Questions.Q12.value[0][0], 11
+    elif additional_info == "Нет":
         survey.set_condition("chronic_lung_disease", False)
-    return Questions.Q12.value[0][0]
+        return Questions.Q12.value[0][0], 11
+    else:
+        return "Неверный выбор", 11
 
 
 def handle_q12(survey, message):
+    msg, num = handle_start_end(message.text, 12)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("tuberculosis", True)
-    else:
+        return Questions.Q13.value[0][0], 12
+    elif additional_info == "Нет":
         survey.set_condition("tuberculosis", False)
-    return Questions.Q13.value[0][0]
+        return Questions.Q13.value[0][0], 12
+    else:
+        return "Неверный выбор", 12
 
 
 def handle_q13(survey, message):
+    msg, num = handle_start_end(message.text, 13)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("diabetes", True)
-        return Questions.Q13_1.value[0][0]
-    else:
+        return Questions.Q13_1.value[0][0], 13
+    elif additional_info == "Нет":
         survey.set_condition("diabetes", False)
-        return Questions.Q14.value[0][0]
+        return Questions.Q14.value[0][0], 13
+    else:
+        return "Неверный выбор", 13
 
 
 def handle_q13_1(survey, message):
+    msg, num = handle_start_end(message.text, 13)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("diabetes", True, True)
-    else:
+        return Questions.Q14.value[0][0], 13
+    elif additional_info == "Нет":
         survey.set_condition("diabetes", True, False)
-    return Questions.Q14.value[0][0]
+        return Questions.Q14.value[0][0], 13
+    else:
+        return "Неверный выбор", 13
 
 
 def handle_q14(survey, message):
+    msg, num = handle_start_end(message.text, 14)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("stomach_disease", True)
-    else:
+        return Questions.Q15.value[0][0], 14
+    elif additional_info == "Нет":
         survey.set_condition("stomach_disease", False)
-    return Questions.Q15.value[0][0]
+        return Questions.Q15.value[0][0], 14
+    else:
+        return "Неверный выбор", 14
 
 
 def handle_q15(survey, message):
+    msg, num = handle_start_end(message.text, 15)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("chronic_kidney_disease", True)
-    else:
+        return Questions.Q16.value[0][0], 15
+    elif additional_info == "Нет":
         survey.set_condition("chronic_kidney_disease", False)
-    return Questions.Q16.value[0][0]
+        return Questions.Q16.value[0][0], 15
+    else:
+        return "Неверный выбор", 15
 
 
 def handle_q16(survey, message):
+    msg, num = handle_start_end(message.text, 16)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("cancer", True)
-        return Questions.Q16_1.value[0][0]
-    else:
+        return Questions.Q16_1.value[0][0], 16
+    elif additional_info == "Нет":
         survey.set_condition("cancer", False)
-        return Questions.Q17.value[0][0]
+        return Questions.Q17.value[0][0], 16
+    else:
+        return "Неверный выбор", 16
 
 
 def handle_q16_1(survey, message):
+    msg, num = handle_start_end(message.text, 16)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     survey.set_condition("cancer", True, additional_info)
-    return Questions.Q17.value[0][0]
+    return Questions.Q17.value[0][0], 16
 
 
 def handle_q17(survey, message):
+    msg, num = handle_start_end(message.text, 17)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_condition("high_cholesterol", True)
-        return Questions.Q17_1.value[0][0]
-    else:
+        return Questions.Q17_1.value[0][0], 17
+    elif additional_info == "Нет":
         survey.set_condition("high_cholesterol", False)
-        return Questions.Q18.value[0][0]
+        return Questions.Q18.value[0][0], 17
+    else:
+        return "Неверный выбор", 17
 
 
 def handle_q17_1(survey, message):
+    msg, num = handle_start_end(message.text, 17)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
-    survey.set_condition("high_cholesterol", True, True)
-    return Questions.Q18.value[0][0]
+    if additional_info == "Да":
+        survey.set_condition("high_cholesterol", True, True)
+        return Questions.Q18.value[0][0], 17
+    elif additional_info == "Нет":
+        survey.set_condition("high_cholesterol", True, False)
+        return Questions.Q18.value[0][0], 17
+    else:
+        return "Неверный выбор", 17
 
 
 def handle_q18(survey, message):
+    msg, num = handle_start_end(message.text, 18)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_health_event("myocardial_infarction", True)
-        return Questions.Q19.value[0][0]
-    else:
+        return Questions.Q19.value[0][0], 18
+    elif additional_info == "Нет":
         survey.set_health_event("myocardial_infarction", False)
-        return Questions.Q19.value[0][0]
+        return Questions.Q19.value[0][0], 18
+    else:
+        return "Неверный выбор", 18
 
 
 def handle_q19(survey, message):
+    msg, num = handle_start_end(message.text, 19)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_health_event("stroke", True)
-        return Questions.Q20.value[0][0]
-    else:
+        return Questions.Q20.value[0][0], 19
+    elif additional_info == "Нет":
         survey.set_health_event("myocardial_infarction", False)
-        return Questions.Q20.value[0][0]
+        return Questions.Q20.value[0][0], 19
+    else:
+        return "Неверный выбор", 19
 
 
 def handle_q20(survey, message):
+    msg, num = handle_start_end(message.text, 20)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_family_history("heart_attack_or_stroke", True)
-        return Questions.Q21.value[0][0]
-    else:
+        return Questions.Q21.value[0][0], 20
+    elif additional_info == "Нет":
         survey.set_family_history("heart_attack_or_stroke", False)
-        return Questions.Q21.value[0][0]
+        return Questions.Q21.value[0][0], 20
+    else:
+        return "Неверный выбор", 20
 
 
 def handle_q21(survey, message):
+    msg, num = handle_start_end(message.text, 21)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_family_history("cancer", True)
-        return Questions.Q21_1.value[0][0]
-    else:
+        return Questions.Q21_1.value[0][0], 21
+    elif additional_info == "Нет":
         survey.set_family_history("cancer", False)
-        return Questions.Q22.value[0][0]
+        return Questions.Q22.value[0][0], 21
+    else:
+        return "Неверный выбор", 21
 
 
 def handle_q21_1(survey, message):
+    msg, num = handle_start_end(message.text, 21)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     survey.set_family_history("cancer", True, additional_info)
-    return Questions.Q22.value[0][0]
+    return Questions.Q22.value[0][0], 21
 
 
 def handle_q22(survey, message):
+    msg, num = handle_start_end(message.text, 22)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("chest_pain", True)
-        return Questions.Q22_1.value[0][0]
-    else:
+        return Questions.Q22_1.value[0][0], 22
+    elif additional_info == "Нет":
         survey.set_symptom("chest_pain", False)
-        return Questions.Q23.value[0][0]
+        return Questions.Q23.value[0][0], 22
+    else:
+        return "Неверный выбор", 22
 
 
 def handle_q22_1(survey, message):
+    msg, num = handle_start_end(message.text, 22)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("chest_pain_disappears", True)
-    else:
+        return Questions.Q23.value[0][0], 22
+    elif additional_info == "Нет":
         survey.set_symptom("chest_pain_disappears", False)
-    return Questions.Q23.value[0][0]
+        return Questions.Q23.value[0][0], 22
+    else:
+        return "Неверный выбор", 22
 
 
 def handle_q23(survey, message):
+    msg, num = handle_start_end(message.text, 23)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("sudden_weakness", True)
-        return Questions.Q24.value[0][0]
-    else:
+        return Questions.Q24.value[0][0], 23
+    elif additional_info == "Нет":
         survey.set_symptom("sudden_weakness", False)
-        return Questions.Q24.value[0][0]
+        return Questions.Q24.value[0][0], 23
+    else:
+        return "Неверный выбор", 23
 
 
 def handle_q24(survey, message):
+    msg, num = handle_start_end(message.text, 24)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("sudden_numbness", True)
-        return Questions.Q25.value[0][0]
-    else:
+        return Questions.Q25.value[0][0], 24
+    elif additional_info == "Нет":
         survey.set_symptom("sudden_numbness", False)
-        return Questions.Q25.value[0][0]
+        return Questions.Q25.value[0][0], 24
+    else:
+        return "Неверный выбор", 24
 
 
 def handle_q25(survey, message):
+    msg, num = handle_start_end(message.text, 25)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("sudden_vision_loss", True)
-    else:
+        return Questions.Q26.value[0][0], 25
+    elif additional_info == "Нет":
         survey.set_symptom("sudden_vision_loss", False)
-    return Questions.Q26.value[0][0]
+        return Questions.Q26.value[0][0], 25
+    else:
+        return "Неверный выбор", 25
 
 
 def handle_q26(survey, message):
+    msg, num = handle_start_end(message.text, 26)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("chronic_cough", True)
-    else:
+        return Questions.Q27.value[0][0], 26
+    elif additional_info == "Нет":
         survey.set_symptom("chronic_cough", False)
-    return Questions.Q27.value[0][0]
+        return Questions.Q27.value[0][0], 26
+    else:
+        return "Неверный выбор", 26
 
 
 def handle_q27(survey, message):
+    msg, num = handle_start_end(message.text, 27)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("wheezing", True)
-    else:
+        return Questions.Q28.value[0][0], 27
+    elif additional_info == "Нет":
         survey.set_symptom("wheezing", False)
-    return Questions.Q28.value[0][0]
+        return Questions.Q28.value[0][0], 27
+    else:
+        return "Неверный выбор", 27
 
 
 def handle_q28(survey, message):
+    msg, num = handle_start_end(message.text, 28)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("coughing_blood", True)
-    else:
+        return Questions.Q29.value[0][0], 28
+    elif additional_info == "Нет":
         survey.set_symptom("coughing_blood", False)
-    return Questions.Q29.value[0][0]
+        return Questions.Q29.value[0][0], 28
+    else:
+        return "Неверный выбор", 28
 
 
 def handle_q29(survey, message):
+    msg, num = handle_start_end(message.text, 29)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("upper_abdominal_pain", True)
-    else:
+        return Questions.Q30.value[0][0], 29
+    elif additional_info == "Нет":
         survey.set_symptom("upper_abdominal_pain", False)
-    return Questions.Q30.value[0][0]
+        return Questions.Q30.value[0][0], 29
+    else:
+        return "Неверный выбор", 29
 
 
 def handle_q30(survey, message):
+    msg, num = handle_start_end(message.text, 30)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("black_stool", True)
-    else:
+        return Questions.Q31.value[0][0], 30
+    elif additional_info == "Нет":
         survey.set_symptom("black_stool", False)
-    return Questions.Q31.value[0][0]
+        return Questions.Q31.value[0][0], 30
+    else:
+        return "Неверный выбор", 30
 
 
 def handle_q31(survey, message):
+    msg, num = handle_start_end(message.text, 31)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("unexplained_weight_loss", True)
-    else:
+        return Questions.Q32.value[0][0], 31
+    elif additional_info == "Нет":
         survey.set_symptom("unexplained_weight_loss", False)
-    return Questions.Q32.value[0][0]
+        return Questions.Q32.value[0][0], 31
+    else:
+        return "Неверный выбор", 31
 
 
 def handle_q32(survey, message):
+    msg, num = handle_start_end(message.text, 32)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("anal_pain", True)
-    else:
+        return Questions.Q33.value[0][0], 32
+    elif additional_info == "Нет":
         survey.set_symptom("anal_pain", False)
-    return Questions.Q33.value[0][0]
+        return Questions.Q33.value[0][0], 32
+    else:
+        return "Неверный выбор", 32
 
 
 def handle_q33(survey, message):
+    msg, num = handle_start_end(message.text, 33)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_symptom("blood_in_stool", True)
-    else:
+        return Questions.Q34.value[0][0], 33
+    elif additional_info == "Нет":
         survey.set_symptom("blood_in_stool", False)
-    return Questions.Q34.value[0][0]
+        return Questions.Q34.value[0][0], 33
+    else:
+        return "Неверный выбор", 33
 
 
 def handle_q34(survey, message):
+    msg, num = handle_start_end(message.text, 34)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_lifestyle("smoking", True)
-        return Questions.Q34_1.value[0][0]
-    else:
+        return Questions.Q34_1.value[0][0], 34
+    elif additional_info == "Нет":
         survey.set_symptom("smoking", False)
-        return Questions.Q35.value[0][0]
+        return Questions.Q35.value[0][0], 34
+    else:
+        return "Неверный выбор", 34
 
 
 def handle_q34_1(survey, message):
+    msg, num = handle_start_end(message.text, 34)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
-
-    survey.set_symptom("cigarettes_per_day", additional_info)
-    return Questions.Q35.value[0][0]
+    try:
+        additional_info = int(additional_info)
+        survey.set_symptom("cigarettes_per_day", additional_info)
+        return Questions.Q35.value[0][0], 34
+    except ValueError:
+        return "Неправильное число", 34
 
 
 def handle_q35(survey, message):
+    msg, num = handle_start_end(message.text, 35)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     survey.set_symptom("walking_minutes_per_day", additional_info)
-    return Questions.Q36.value[0][0]
+    return Questions.Q36.value[0][0], 35
+
 
 
 def handle_q36(survey, message):
+    msg, num = handle_start_end(message.text, 36)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_lifestyle("vegetable_fruit_intake", True)
-    else:
+    elif additional_info == "Нет":
         survey.set_symptom("vegetable_fruit_intake", False)
-    return Questions.Q37.value[0][0]
+    else:
+        return "Неверный выбор", 36
+    return Questions.Q37.value[0][0], 36
 
 
 def handle_q37(survey, message):
+    msg, num = handle_start_end(message.text, 37)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_lifestyle("salt_habit", True)
-    else:
+    elif additional_info == "Нет":
         survey.set_symptom("salt_habit", False)
-    return Questions.Q38.value[0][0]
+    else:
+        return "Неверный выбор", 37
+    return Questions.Q38.value[0][0], 37
 
 
 def handle_q38(survey, message):
+    msg, num = handle_start_end(message.text, 38)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_lifestyle("drug_use", True)
-    else:
+    elif additional_info == "Нет":
         survey.set_symptom("drug_use", False)
-    return Questions.Q39.value[0][0]
+    else:
+        return "Неверный выбор", 38
+    return Questions.Q39.value[0][0], 38
 
 
 def handle_q39(survey, message):
+    msg, num = handle_start_end(message.text, 39)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Никогда (0 баллов)":
         survey.set_lifestyle("alcohol_frequency", 0)
@@ -568,10 +860,15 @@ def handle_q39(survey, message):
         survey.set_lifestyle("alcohol_frequency", 3)
     elif additional_info == "≥ 4 раз в неделю (4 балла)":
         survey.set_lifestyle("alcohol_frequency", 3)
-    return Questions.Q40.value[0][0]
+    else:
+        return "Неверный выбор", 39
+    return Questions.Q40.value[0][0], 39
 
 
 def handle_q40(survey, message):
+    msg, num = handle_start_end(message.text, 40)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "1-2 порции (0 баллов)":
         survey.set_lifestyle("alcohol_portions", 0)
@@ -581,12 +878,17 @@ def handle_q40(survey, message):
         survey.set_lifestyle("alcohol_portions", 2)
     elif additional_info == "7-9 порций (3 балла)":
         survey.set_lifestyle("alcohol_portions", 3)
-    elif additional_info == "≥ 10 порций (4 балла))":
+    elif additional_info == "≥ 10 порций (4 балла)":
         survey.set_lifestyle("alcohol_portions", 3)
-    return Questions.Q41.value[0][0]
+    else:
+        return "Неверный выбор", 40
+    return Questions.Q41.value[0][0], 40
 
 
 def handle_q41(survey, message):
+    msg, num = handle_start_end(message.text, 41)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Никогда (0 баллов)":
         survey.set_lifestyle("binge_drinking_frequency", 0)
@@ -596,27 +898,37 @@ def handle_q41(survey, message):
         survey.set_lifestyle("binge_drinking_frequency", 2)
     elif additional_info == "2-3 раза в неделю (3 балла)":
         survey.set_lifestyle("binge_drinking_frequency", 3)
-    elif additional_info == "≥ 4 раз в неделю (4 балла))":
+    elif additional_info == "≥ 4 раз в неделю (4 балла)":
         survey.set_lifestyle("binge_drinking_frequency", 3)
+    else:
+        return "Неверный выбор", 41
     survey.calculate_score()
-    return Questions.Q42.value[0][0]
+    return Questions.Q42.value[0][0], 41
 
 
 def handle_q42(survey, message):
+    msg, num = handle_start_end(message.text, 42)
+    if not (msg == "нет"):
+        return msg, num
     additional_info = message.text
     if additional_info == "Да":
         survey.set_additional_complaints(True)
-    else:
+        return "end", 42
+    elif additional_info == "Нет":
         survey.set_additional_complaints(False)
-    return "end"
+        return "end", 42
+    else:
+        return "Неверный выбор", 42
 
 
 question_handlers = {
     QuestionsNumber.Q1: handle_q1,
+    QuestionsNumber.Q1_1: handle_q1_1,
     QuestionsNumber.Q2: handle_q2,
     QuestionsNumber.Q3: handle_q3,
     QuestionsNumber.Q4: handle_q4,
     QuestionsNumber.Q5: handle_q5,
+    QuestionsNumber.Q5_1: handle_q5_1,
     QuestionsNumber.Q6: handle_q6,
     QuestionsNumber.Q7: handle_q7,
     QuestionsNumber.Q8: handle_q8,
