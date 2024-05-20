@@ -797,9 +797,15 @@ def handle_q35(survey, message):
     msg, num = handle_start_end(message.text, 35)
     if not (msg == "нет"):
         return msg, num
-    additional_info = message.text
-    survey.set_symptom("walking_minutes_per_day", additional_info)
-    return Questions.Q36.value[0][0], 35
+    if message.text == "До 30 минут":
+        survey.set_symptom("walking_minutes_per_day", 29)
+        return Questions.Q36.value[0][0], 35
+    elif message.text == "30 минут и более":
+        survey.set_symptom("walking_minutes_per_day", 30)
+        return Questions.Q36.value[0][0], 35
+    else:
+        return "Неверный выбор", 35
+
 
 
 
