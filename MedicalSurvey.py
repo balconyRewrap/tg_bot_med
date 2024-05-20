@@ -93,10 +93,12 @@ class MedicalSurvey:
             self.lifestyle[habit] = value
 
     def calculate_score(self):
-        self.lifestyle['score'] = self.lifestyle['alcohol_frequency'] + self.lifestyle['alcohol_portions'] + self.lifestyle['binge_drinking_frequency']
+        self.lifestyle['score'] = self.lifestyle['alcohol_frequency'] + self.lifestyle['alcohol_portions'] + \
+                                  self.lifestyle['binge_drinking_frequency']
 
     def set_additional_complaints(self, complaints):
         self.additional_complaints = complaints
+
     def print_fields(self):
         print("Survey Date:", self.survey_date)
         print("Patient Name:", self.patient_name)
@@ -129,4 +131,3 @@ class MedicalSurvey:
         for habit, value in self.lifestyle.items():
             print(f"  {habit}: {value}")
         print("Additional Complaints:", self.additional_complaints)
-

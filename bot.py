@@ -2,39 +2,56 @@ import telebot
 from telebot import types
 from MedicalSurvey import MedicalSurvey
 from QuestionsHandlers import Questions, QuestionsNumber, question_handlers
+from datetime import datetime
 
-# Замените 'YOUR_TOKEN' на ваш токен, полученный от BotFather в Telegram
 bot = telebot.TeleBot('6455505820:AAHPvsR9fDxWtO8Okg2yz_XBLBt41J3Jn44')
 
 
-# Функция для запроса следующей переменной
-def get_last_question_text(question):
-    questions = list(Questions)
-    index = 0
-    for q in questions:
-        if q.value[0][0] == question:
-            break
-        index += 1
-    previous_question = questions[index - 1 - 1]
-    return str(previous_question.value[0][0])
-
-
-def ask_question(message, survey, question):
-    if message.text == "назад":
-        bot.send_message(message.chat.id, "Вы вернулись на предыдущий шаг.")
-        question_text = get_last_question_text(question)
-        message.text = ""
-        ask_question(message, survey, question_text)
+def ask_question(message, survey, question, is_start=False, first_question=False):
+    if question == Questions.Q1.value[0][0]:
+        current_date = datetime.now()
+        bot.send_message(message.chat.id, Questions.Q1.value[0][0])
+        formatted_date = current_date.strftime("%d-%m-%Y")
+        bot.send_message(message.chat.id, f"{formatted_date}")
+        msg = bot.send_message(message.chat.id, "Все верно?", reply_markup=get_keyboard(Questions.Q1.value[0][0]))
+        bot.register_next_step_handler(msg, lambda m: save_answer(survey, m, question))
+    elif question == Questions.Q5.value[0][0]:
+        msg = bot.send_message(message.chat.id, question, reply_markup=get_keyboard(Questions.Q1.value[0][0]))
+        bot.send_message(message.chat.id, f"{survey.age}")
+        bot.register_next_step_handler(msg, lambda m: save_answer(survey, m, question))
     else:
         msg = bot.send_message(message.chat.id, question, reply_markup=get_keyboard(question))
         bot.register_next_step_handler(msg, lambda m: save_answer(survey, m, question))
 
 
 def handle_question(q, survey, message):
-    question = question_handlers[q](survey, message)
+    question, number = question_handlers[q](survey, message)
     if question == "end":
         finish_registration(survey, message)
-    ask_question(message, survey, question)
+    elif question == "Неправильная Дата Анкетирования":
+        bot.send_message(message.chat.id, "Неправильно введена дата анкетирования")
+        message.text = ""
+        ask_question(message, survey, Questions.Q1_1.value[0][0])
+    elif question == "Неправильная Дата Рождения":
+        bot.send_message(message.chat.id, "Неправильно введена Дата Рождения")
+        message.text = ""
+        ask_question(message, survey, Questions.Q4.value[0][0])
+    elif question == "Неправильное число" or question == "Неверный выбор" or question == "Неправильный пол":
+        bot.send_message(message.chat.id, question)
+        bot.send_message(message.chat.id, "Введите заново, пожалуйста:")
+        message.text = ""
+        attr_name = f"Q{number}"
+        question = getattr(Questions, attr_name).value[0][0]
+        ask_question(message, survey, question)
+    elif question == "назад":
+        bot.send_message(message.chat.id, "Вы вернулись на предыдущий шаг.")
+        attr_name = f"Q{number - 1}"
+        question = getattr(Questions, attr_name).value[0][0]
+        ask_question(message, survey, question)
+    elif question == "start":
+        start(message)
+    else:
+        ask_question(message, survey, question)
 
 
 def save_answer(survey, message, question):
@@ -44,7 +61,6 @@ def save_answer(survey, message, question):
             break
 
 
-# Функция для создания клавиатуры с кнопками "Да" и "Нет"
 def get_keyboard(question):
     keyboard = types.ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
     for member in Questions.__members__.values():
@@ -62,27 +78,22 @@ def get_keyboard(question):
     return keyboard
 
 
-# Функция для завершения регистрации и отправки данных
 def finish_registration(survey, message):
     # Вывод всех данных
     survey.print_fields()
     bot.send_message(message.chat.id, "Ваши данные успешно сохранены:\n")
 
 
-# Обработчик команды /start
 @bot.message_handler(commands=['start'])
 def start(message):
     survey = MedicalSurvey()
     bot.send_message(message.chat.id, "Привет! Для заполнения анкеты, пожалуйста, ответьте на следующие вопросы:")
-    ask_question(message, survey, "1. Дата анкетирования (день, месяц, год):")
+    ask_question(message, survey, f"1. Дата анкетирования (день-месяц-год):", True, True)
 
 
-# Обработчик для любого текстового ввода
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
-    bot.send_message(message.chat.id, "Простите, я вас не понимаю. Для начала заполните анкету.")
+    bot.send_message(message.chat.id, "Простите, я вас не понимаю. Если вы хотите заполнить анкету, то пропишите команду /start")
 
 
-# Запуск бота
 bot.polling()
-
