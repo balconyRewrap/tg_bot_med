@@ -1,13 +1,14 @@
 import telebot
+from config import TG_TOKEN
 from telebot import types
 from MedicalSurvey import MedicalSurvey
 from QuestionsHandlers import Questions, QuestionsNumber, question_handlers
 from datetime import datetime
+from DatabaseManager import add_medical_survey, get_medical_survey
+bot = telebot.TeleBot(TG_TOKEN)
 
-bot = telebot.TeleBot('6455505820:AAHPvsR9fDxWtO8Okg2yz_XBLBt41J3Jn44')
 
-
-def ask_question(message, survey, question, is_start=False, first_question=False):
+def ask_question(message, survey, question):
     if question == Questions.Q1.value[0][0]:
         current_date = datetime.now()
         bot.send_message(message.chat.id, Questions.Q1.value[0][0])
@@ -81,19 +82,28 @@ def get_keyboard(question):
 def finish_registration(survey, message):
     # Вывод всех данных
     survey.print_fields()
+    add_medical_survey(survey)
     bot.send_message(message.chat.id, "Ваши данные успешно сохранены:\n")
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    survey = MedicalSurvey()
+    bot.send_message(message.chat.id, "Пожалуйста, введите номер вашего полиса:")
+    bot.register_next_step_handler(message, process_policy_number)
+
+
+def process_policy_number(message):
+    policy_number = message.text
+    survey = MedicalSurvey(policy_number)
+    bot.send_message(message.chat.id, f"Спасибо! Ваш номер полиса: {policy_number}")
     bot.send_message(message.chat.id, "Привет! Для заполнения анкеты, пожалуйста, ответьте на следующие вопросы:")
     ask_question(message, survey, f"1. Дата анкетирования (день-месяц-год):", True, True)
 
 
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
-    bot.send_message(message.chat.id, "Простите, я вас не понимаю. Если вы хотите заполнить анкету, то пропишите команду /start")
+    bot.send_message(message.chat.id,
+                     "Простите, я вас не понимаю. Если вы хотите заполнить анкету, то пропишите команду /start")
 
 
 bot.polling()
