@@ -1,6 +1,7 @@
 class MedicalSurvey:
-    def __init__(self, survey_date=None, patient_name=None, gender=None, birth_date=None, age=None,
+    def __init__(self, policy_number, survey_date=None, patient_name=None, gender=None, birth_date=None, age=None,
                  medical_organization=None, doctor_name=None):
+        self.policy_number = policy_number
         self.survey_date = survey_date
         self.patient_name = patient_name
         self.gender = gender
@@ -10,7 +11,7 @@ class MedicalSurvey:
         self.doctor_name = doctor_name
 
         self.conditions = {
-            '"hypertension"': {'diagnosed': False, 'medication': False},
+            'hypertension': {'diagnosed': False, 'medication': False},
             'ischemic_heart_disease': False,
             'cerebrovascular_disease': False,
             'chronic_lung_disease': False,
@@ -51,7 +52,7 @@ class MedicalSurvey:
         self.lifestyle = {
             'smoking': False,
             'cigarettes_per_day': 0,
-            'walking_minutes_per_day': "",
+            'walking_minutes_per_day': 0,
             'vegetable_fruit_intake': False,
             'salt_habit': False,
             'drug_use': False,
@@ -100,6 +101,7 @@ class MedicalSurvey:
         self.additional_complaints = complaints
 
     def print_fields(self):
+        print("policy number:", self.policy_number)
         print("Survey Date:", self.survey_date)
         print("Patient Name:", self.patient_name)
         print("Gender:", self.gender)
@@ -109,7 +111,7 @@ class MedicalSurvey:
         print("Doctor Name:", self.doctor_name)
         print("Conditions:")
         for condition, data in self.conditions.items():
-            if condition == '"hypertension"':
+            if condition == 'hypertension' or condition == 'diabetes' or condition == 'high_cholesterol':
                 print(f"  {condition}: Diagnosed - {data['diagnosed']}, Medication - {data['medication']}")
             elif condition == 'cancer':
                 print(f"  {condition}: Diagnosed - {data['diagnosed']}, Type - {data['type']}")
