@@ -110,7 +110,7 @@ class MedicalSurvey:
             if isinstance(self.conditions[condition], dict):
                 if condition == 'cancer':
                     self.conditions[condition]['diagnosed'] = diagnosed
-                    if type is not '':
+                    if type != '':
                         self.conditions[condition]['type'] = type
                 else:
                     self.conditions[condition]['diagnosed'] = diagnosed
@@ -181,9 +181,9 @@ class MedicalSurvey:
                 formatted_data_conditions += "\n"
 
             elif condition == 'cancer':
-                formatted_data_conditions += f"<b>{self.translations[condition]}</b>:"
+                formatted_data_conditions += f"<b>{self.translations[condition]}</b>: "
                 if data['diagnosed']:
-                    formatted_data_conditions += f"Диагностировано, Тип - {data['type']}"
+                    formatted_data_conditions += f"Диагностировано, Тип - {data['type']} \n"
                 else:
                     formatted_data_conditions += "Не диагностировано" + "\n"
             else:

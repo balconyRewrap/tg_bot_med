@@ -471,7 +471,7 @@ def handle_q16_1(survey, message):
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
-    survey.set_condition("cancer", True, additional_info)
+    survey.set_condition("cancer", diagnosed = True, type = additional_info)
     return Questions.Q17.value[0][0], 16
 
 
@@ -570,7 +570,7 @@ def handle_q21_1(survey, message):
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
-    survey.set_family_history("cancer", True, additional_info)
+    survey.set_family_history("cancer", True, details = additional_info)
     return Questions.Q22.value[0][0], 21
 
 
@@ -778,7 +778,7 @@ def handle_q34(survey, message):
         survey.set_lifestyle("smoking", True)
         return Questions.Q34_1.value[0][0], 34
     elif additional_info == "Нет":
-        survey.set_symptom("smoking", False)
+        survey.set_lifestyle("smoking", False)
         return Questions.Q35.value[0][0], 34
     else:
         return "Неверный выбор", 34
@@ -791,7 +791,7 @@ def handle_q34_1(survey, message):
     additional_info = message.text
     try:
         additional_info = int(additional_info)
-        survey.set_symptom("cigarettes_per_day", additional_info)
+        survey.set_lifestyle("cigarettes_per_day", additional_info)
         return Questions.Q35.value[0][0], 34
     except ValueError:
         return "Неправильное число", 34
@@ -802,10 +802,10 @@ def handle_q35(survey, message):
     if not (msg == "нет"):
         return msg, num
     if message.text == "До 30 минут":
-        survey.set_symptom("walking_minutes_per_day", 29)
+        survey.set_lifestyle("walking_minutes_per_day", 29)
         return Questions.Q36.value[0][0], 35
     elif message.text == "30 минут и более":
-        survey.set_symptom("walking_minutes_per_day", 30)
+        survey.set_lifestyle("walking_minutes_per_day", 30)
         return Questions.Q36.value[0][0], 35
     else:
         return "Неверный выбор", 35
@@ -819,7 +819,7 @@ def handle_q36(survey, message):
     if additional_info == "Да":
         survey.set_lifestyle("vegetable_fruit_intake", True)
     elif additional_info == "Нет":
-        survey.set_symptom("vegetable_fruit_intake", False)
+        survey.set_lifestyle("vegetable_fruit_intake", False)
     else:
         return "Неверный выбор", 36
     return Questions.Q37.value[0][0], 36
@@ -833,7 +833,7 @@ def handle_q37(survey, message):
     if additional_info == "Да":
         survey.set_lifestyle("salt_habit", True)
     elif additional_info == "Нет":
-        survey.set_symptom("salt_habit", False)
+        survey.set_lifestyle("salt_habit", False)
     else:
         return "Неверный выбор", 37
     return Questions.Q38.value[0][0], 37
@@ -847,7 +847,7 @@ def handle_q38(survey, message):
     if additional_info == "Да":
         survey.set_lifestyle("drug_use", True)
     elif additional_info == "Нет":
-        survey.set_symptom("drug_use", False)
+        survey.set_lifestyle("drug_use", False)
     else:
         return "Неверный выбор", 38
     return Questions.Q39.value[0][0], 38

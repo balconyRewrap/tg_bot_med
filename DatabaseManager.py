@@ -164,7 +164,7 @@ def get_medical_survey(policy_number: str) -> Optional[MedicalSurvey]:
 
 # Пример использования
 if __name__ == "__main__":
-    survey1 = MedicalSurvey("123412341234", "01-01-2024", "Уву Имя Отчество", "Муж", "01-01-2005", "19",
+    survey1 = MedicalSurvey("123412341234", "01-01-2024", "Фамилия Имя Отчество", "Муж", "01-01-2005", "19",
                             "Медицинская Организация", "ФИО Позиция")
     survey1.set_condition('hypertension', True, True)
     survey1.set_condition('ischemic_heart_disease', True)
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     survey1.set_condition('diabetes', diagnosed=True, medication=False)
     survey1.set_condition('stomach_disease', False)
     survey1.set_condition('chronic_kidney_disease', True)
-    survey1.set_condition('cancer', True, "Рак Жопы")
+    survey1.set_condition('cancer', True, type = 'Рак Простаты')
     survey1.set_health_event('myocardial_infarction', True)
     survey1.set_family_history('cancer', True, "Рак простаты")
     survey1.set_symptom('chest_pain', True)
