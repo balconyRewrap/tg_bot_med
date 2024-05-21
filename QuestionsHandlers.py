@@ -84,7 +84,8 @@ class Questions(Enum):
         " в году?",
         "Да", "Нет"),
     Q27 = (
-        "27. Бывают ли у Вас свистящие или жужжащие хрипы в грудной клетке при дыхании, не проходящие при откашливании?",
+        "27. Бывают ли у Вас свистящие или жужжащие хрипы в грудной клетке "
+        "при дыхании, не проходящие при откашливании?",
         "Да", "Нет"),
     Q28 = ("28. Бывало ли у Вас когда-либо кровохарканье?", "Да", "Нет"),
     Q29 = (
@@ -183,17 +184,19 @@ class QuestionsNumber(Enum):
     Q42 = "42."
 
 
-def handle_start_end(message_text: str, question: int):
+def handle_commands(message_text: str, question: int):
     if message_text == "/start":
         return "start", question
     elif message_text == "назад":
         return "назад", question
+    elif message_text == "/get":
+        return "get", question
     else:
         return "нет", question
 
 
 def handle_q1(survey, message):
-    msg, num = handle_start_end(message.text, 1)
+    msg, num = handle_commands(message.text, 1)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -210,19 +213,19 @@ def handle_q1(survey, message):
 
 
 def handle_q1_1(survey, message):
-    msg, num = handle_start_end(message.text, 1)
+    msg, num = handle_commands(message.text, 1)
     if not (msg == "нет"):
         return msg, num
     try:
         date = datetime.strptime(message.text, "%d-%m-%Y")
-        survey.survey_date = date
+        survey.survey_date = date.strftime("%d-%m-%Y")
         return Questions.Q2.value[0][0], 1
     except ValueError:
         return "Неправильная Дата Анкетирования", 1
 
 
 def handle_q2(survey, message):
-    msg, num = handle_start_end(message.text, 2)
+    msg, num = handle_commands(message.text, 2)
     if not (msg == "нет"):
         return msg, num
     survey.patient_name = message.text
@@ -231,7 +234,7 @@ def handle_q2(survey, message):
 
 
 def handle_q3(survey, message):
-    msg, num = handle_start_end(message.text, 3)
+    msg, num = handle_commands(message.text, 3)
     if not (msg == "нет"):
         return msg, num
     if message.text == "Муж" or message.text == "Жен":
@@ -242,16 +245,17 @@ def handle_q3(survey, message):
 
 
 def handle_q4(survey, message):
-    msg, num = handle_start_end(message.text, 4)
+    msg, num = handle_commands(message.text, 4)
     if not (msg == "нет"):
         return msg, num
     try:
         date = datetime.strptime(message.text, "%d-%m-%Y")
-        survey.birth_date = date
+        survey.birth_date = date.strftime("%d-%m-%Y")
+        
         survey_date = datetime.strptime(survey.survey_date, "%d-%m-%Y")
 
-        age = survey_date.year - survey.birth_date.year
-        if (survey.birth_date.month, survey_date.day) < (survey.birth_date.month, survey_date.day):
+        age = survey_date.year - date.year
+        if (date.month, survey_date.day) < (date.month, survey_date.day):
             age -= 1
         survey.age = age
         return Questions.Q5.value[0][0], 4
@@ -260,7 +264,7 @@ def handle_q4(survey, message):
 
 
 def handle_q5(survey, message):
-    msg, num = handle_start_end(message.text, 5)
+    msg, num = handle_commands(message.text, 5)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -273,7 +277,7 @@ def handle_q5(survey, message):
 
 
 def handle_q5_1(survey, message):
-    handle_start_end(message.text, 1)
+    handle_commands(message.text, 1)
     try:
         survey.age = int(message.text)
         return Questions.Q6.value[0][0], 5
@@ -282,7 +286,7 @@ def handle_q5_1(survey, message):
 
 
 def handle_q6(survey, message):
-    msg, num = handle_start_end(message.text, 6)
+    msg, num = handle_commands(message.text, 6)
     if not (msg == "нет"):
         return msg, num
     survey.medical_organization = message.text
@@ -290,7 +294,7 @@ def handle_q6(survey, message):
 
 
 def handle_q7(survey, message):
-    msg, num = handle_start_end(message.text, 7)
+    msg, num = handle_commands(message.text, 7)
     if not (msg == "нет"):
         return msg, num
     survey.doctor_name = message.text
@@ -298,7 +302,7 @@ def handle_q7(survey, message):
 
 
 def handle_q8(survey, message):
-    msg, num = handle_start_end(message.text, 8)
+    msg, num = handle_commands(message.text, 8)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -313,7 +317,7 @@ def handle_q8(survey, message):
 
 
 def handle_q8_1(survey, message):
-    msg, num = handle_start_end(message.text, 8)
+    msg, num = handle_commands(message.text, 8)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -328,7 +332,7 @@ def handle_q8_1(survey, message):
 
 
 def handle_q9(survey, message):
-    msg, num = handle_start_end(message.text, 9)
+    msg, num = handle_commands(message.text, 9)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -343,7 +347,7 @@ def handle_q9(survey, message):
 
 
 def handle_q10(survey, message):
-    msg, num = handle_start_end(message.text, 10)
+    msg, num = handle_commands(message.text, 10)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -358,7 +362,7 @@ def handle_q10(survey, message):
 
 
 def handle_q11(survey, message):
-    msg, num = handle_start_end(message.text, 11)
+    msg, num = handle_commands(message.text, 11)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -373,7 +377,7 @@ def handle_q11(survey, message):
 
 
 def handle_q12(survey, message):
-    msg, num = handle_start_end(message.text, 12)
+    msg, num = handle_commands(message.text, 12)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -388,7 +392,7 @@ def handle_q12(survey, message):
 
 
 def handle_q13(survey, message):
-    msg, num = handle_start_end(message.text, 13)
+    msg, num = handle_commands(message.text, 13)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -403,7 +407,7 @@ def handle_q13(survey, message):
 
 
 def handle_q13_1(survey, message):
-    msg, num = handle_start_end(message.text, 13)
+    msg, num = handle_commands(message.text, 13)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -418,7 +422,7 @@ def handle_q13_1(survey, message):
 
 
 def handle_q14(survey, message):
-    msg, num = handle_start_end(message.text, 14)
+    msg, num = handle_commands(message.text, 14)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -433,7 +437,7 @@ def handle_q14(survey, message):
 
 
 def handle_q15(survey, message):
-    msg, num = handle_start_end(message.text, 15)
+    msg, num = handle_commands(message.text, 15)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -448,7 +452,7 @@ def handle_q15(survey, message):
 
 
 def handle_q16(survey, message):
-    msg, num = handle_start_end(message.text, 16)
+    msg, num = handle_commands(message.text, 16)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -463,7 +467,7 @@ def handle_q16(survey, message):
 
 
 def handle_q16_1(survey, message):
-    msg, num = handle_start_end(message.text, 16)
+    msg, num = handle_commands(message.text, 16)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -472,7 +476,7 @@ def handle_q16_1(survey, message):
 
 
 def handle_q17(survey, message):
-    msg, num = handle_start_end(message.text, 17)
+    msg, num = handle_commands(message.text, 17)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -487,7 +491,7 @@ def handle_q17(survey, message):
 
 
 def handle_q17_1(survey, message):
-    msg, num = handle_start_end(message.text, 17)
+    msg, num = handle_commands(message.text, 17)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -502,7 +506,7 @@ def handle_q17_1(survey, message):
 
 
 def handle_q18(survey, message):
-    msg, num = handle_start_end(message.text, 18)
+    msg, num = handle_commands(message.text, 18)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -517,7 +521,7 @@ def handle_q18(survey, message):
 
 
 def handle_q19(survey, message):
-    msg, num = handle_start_end(message.text, 19)
+    msg, num = handle_commands(message.text, 19)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -532,7 +536,7 @@ def handle_q19(survey, message):
 
 
 def handle_q20(survey, message):
-    msg, num = handle_start_end(message.text, 20)
+    msg, num = handle_commands(message.text, 20)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -547,7 +551,7 @@ def handle_q20(survey, message):
 
 
 def handle_q21(survey, message):
-    msg, num = handle_start_end(message.text, 21)
+    msg, num = handle_commands(message.text, 21)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -562,7 +566,7 @@ def handle_q21(survey, message):
 
 
 def handle_q21_1(survey, message):
-    msg, num = handle_start_end(message.text, 21)
+    msg, num = handle_commands(message.text, 21)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -571,7 +575,7 @@ def handle_q21_1(survey, message):
 
 
 def handle_q22(survey, message):
-    msg, num = handle_start_end(message.text, 22)
+    msg, num = handle_commands(message.text, 22)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -586,7 +590,7 @@ def handle_q22(survey, message):
 
 
 def handle_q22_1(survey, message):
-    msg, num = handle_start_end(message.text, 22)
+    msg, num = handle_commands(message.text, 22)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -601,7 +605,7 @@ def handle_q22_1(survey, message):
 
 
 def handle_q23(survey, message):
-    msg, num = handle_start_end(message.text, 23)
+    msg, num = handle_commands(message.text, 23)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -616,7 +620,7 @@ def handle_q23(survey, message):
 
 
 def handle_q24(survey, message):
-    msg, num = handle_start_end(message.text, 24)
+    msg, num = handle_commands(message.text, 24)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -631,7 +635,7 @@ def handle_q24(survey, message):
 
 
 def handle_q25(survey, message):
-    msg, num = handle_start_end(message.text, 25)
+    msg, num = handle_commands(message.text, 25)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -646,7 +650,7 @@ def handle_q25(survey, message):
 
 
 def handle_q26(survey, message):
-    msg, num = handle_start_end(message.text, 26)
+    msg, num = handle_commands(message.text, 26)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -661,7 +665,7 @@ def handle_q26(survey, message):
 
 
 def handle_q27(survey, message):
-    msg, num = handle_start_end(message.text, 27)
+    msg, num = handle_commands(message.text, 27)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -676,7 +680,7 @@ def handle_q27(survey, message):
 
 
 def handle_q28(survey, message):
-    msg, num = handle_start_end(message.text, 28)
+    msg, num = handle_commands(message.text, 28)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -691,7 +695,7 @@ def handle_q28(survey, message):
 
 
 def handle_q29(survey, message):
-    msg, num = handle_start_end(message.text, 29)
+    msg, num = handle_commands(message.text, 29)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -706,7 +710,7 @@ def handle_q29(survey, message):
 
 
 def handle_q30(survey, message):
-    msg, num = handle_start_end(message.text, 30)
+    msg, num = handle_commands(message.text, 30)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -721,7 +725,7 @@ def handle_q30(survey, message):
 
 
 def handle_q31(survey, message):
-    msg, num = handle_start_end(message.text, 31)
+    msg, num = handle_commands(message.text, 31)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -736,7 +740,7 @@ def handle_q31(survey, message):
 
 
 def handle_q32(survey, message):
-    msg, num = handle_start_end(message.text, 32)
+    msg, num = handle_commands(message.text, 32)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -751,7 +755,7 @@ def handle_q32(survey, message):
 
 
 def handle_q33(survey, message):
-    msg, num = handle_start_end(message.text, 33)
+    msg, num = handle_commands(message.text, 33)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -766,7 +770,7 @@ def handle_q33(survey, message):
 
 
 def handle_q34(survey, message):
-    msg, num = handle_start_end(message.text, 34)
+    msg, num = handle_commands(message.text, 34)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -781,7 +785,7 @@ def handle_q34(survey, message):
 
 
 def handle_q34_1(survey, message):
-    msg, num = handle_start_end(message.text, 34)
+    msg, num = handle_commands(message.text, 34)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -794,7 +798,7 @@ def handle_q34_1(survey, message):
 
 
 def handle_q35(survey, message):
-    msg, num = handle_start_end(message.text, 35)
+    msg, num = handle_commands(message.text, 35)
     if not (msg == "нет"):
         return msg, num
     if message.text == "До 30 минут":
@@ -807,10 +811,8 @@ def handle_q35(survey, message):
         return "Неверный выбор", 35
 
 
-
-
 def handle_q36(survey, message):
-    msg, num = handle_start_end(message.text, 36)
+    msg, num = handle_commands(message.text, 36)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -824,7 +826,7 @@ def handle_q36(survey, message):
 
 
 def handle_q37(survey, message):
-    msg, num = handle_start_end(message.text, 37)
+    msg, num = handle_commands(message.text, 37)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -838,7 +840,7 @@ def handle_q37(survey, message):
 
 
 def handle_q38(survey, message):
-    msg, num = handle_start_end(message.text, 38)
+    msg, num = handle_commands(message.text, 38)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -852,7 +854,7 @@ def handle_q38(survey, message):
 
 
 def handle_q39(survey, message):
-    msg, num = handle_start_end(message.text, 39)
+    msg, num = handle_commands(message.text, 39)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -865,14 +867,14 @@ def handle_q39(survey, message):
     elif additional_info == "2-3 раза в неделю (3 балла)":
         survey.set_lifestyle("alcohol_frequency", 3)
     elif additional_info == "≥ 4 раз в неделю (4 балла)":
-        survey.set_lifestyle("alcohol_frequency", 3)
+        survey.set_lifestyle("alcohol_frequency", 4)
     else:
         return "Неверный выбор", 39
     return Questions.Q40.value[0][0], 39
 
 
 def handle_q40(survey, message):
-    msg, num = handle_start_end(message.text, 40)
+    msg, num = handle_commands(message.text, 40)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -885,14 +887,14 @@ def handle_q40(survey, message):
     elif additional_info == "7-9 порций (3 балла)":
         survey.set_lifestyle("alcohol_portions", 3)
     elif additional_info == "≥ 10 порций (4 балла)":
-        survey.set_lifestyle("alcohol_portions", 3)
+        survey.set_lifestyle("alcohol_portions", 4)
     else:
         return "Неверный выбор", 40
     return Questions.Q41.value[0][0], 40
 
 
 def handle_q41(survey, message):
-    msg, num = handle_start_end(message.text, 41)
+    msg, num = handle_commands(message.text, 41)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text
@@ -905,7 +907,7 @@ def handle_q41(survey, message):
     elif additional_info == "2-3 раза в неделю (3 балла)":
         survey.set_lifestyle("binge_drinking_frequency", 3)
     elif additional_info == "≥ 4 раз в неделю (4 балла)":
-        survey.set_lifestyle("binge_drinking_frequency", 3)
+        survey.set_lifestyle("binge_drinking_frequency", 4)
     else:
         return "Неверный выбор", 41
     survey.calculate_score()
@@ -913,7 +915,7 @@ def handle_q41(survey, message):
 
 
 def handle_q42(survey, message):
-    msg, num = handle_start_end(message.text, 42)
+    msg, num = handle_commands(message.text, 42)
     if not (msg == "нет"):
         return msg, num
     additional_info = message.text

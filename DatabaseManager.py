@@ -2,12 +2,7 @@ import mysql.connector
 from config import MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD
 from MedicalSurvey import MedicalSurvey
 from datetime import datetime
-# Устанавливаем соединение с базой данных
-
-
-# Создаем объект курсора для выполнения SQL-запросов
-
-
+from typing import Optional
 
 def add_medical_survey(medical_survey):
     conn = mysql.connector.connect(
@@ -21,7 +16,8 @@ def add_medical_survey(medical_survey):
         survey_date = datetime.strptime(medical_survey.survey_date, '%d-%m-%Y').date()
         birth_date = datetime.strptime(medical_survey.birth_date, '%d-%m-%Y').date()
         # Добавляем основную информацию об опросе в таблицу medical_survey
-        sql = "REPLACE INTO medical_survey (policy_number, survey_date, patient_name, gender, birth_date, age, medical_organization, doctor_name, additional_complaints) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        sql = ("REPLACE INTO medical_survey (policy_number, survey_date, patient_name, gender, birth_date, age, "
+               "medical_organization, doctor_name, additional_complaints) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)")
         cursor.execute(sql, (
             medical_survey.policy_number, survey_date, medical_survey.patient_name,
             medical_survey.gender,
@@ -32,8 +28,10 @@ def add_medical_survey(medical_survey):
         # Добавляем данные о состояниях в таблицу conditions
         for condition, data in medical_survey.conditions.items():
             if condition == 'hypertension' or condition == 'diabetes' or condition == 'high_cholesterol':
-                sql = "REPLACE INTO conditions (policy_number, condition_name, diagnosed, medication) VALUES (%s, %s, %s, %s)"
-                cursor.execute(sql, (medical_survey.policy_number, condition, int(data['diagnosed']), int(data['medication'])))
+                sql = ("REPLACE INTO conditions (policy_number, condition_name, diagnosed, medication) VALUES (%s, %s, "
+                       "%s, %s)")
+                cursor.execute(sql, (
+                    medical_survey.policy_number, condition, int(data['diagnosed']), int(data['medication'])))
             elif condition == 'cancer':
                 sql = "REPLACE INTO conditions (policy_number, condition_name, diagnosed, type) VALUES (%s, %s, %s, %s)"
                 cursor.execute(sql, (medical_survey.policy_number, condition, int(data['diagnosed']), data['type']))
@@ -50,7 +48,8 @@ def add_medical_survey(medical_survey):
         # Добавляем данные о семейном анамнезе в таблицу family_history
         for condition, data in medical_survey.family_history.items():
             if condition == 'cancer':
-                sql = "REPLACE INTO family_history (policy_number, condition_name, diagnosed, condition_type) VALUES (%s, %s, %s, %s)"
+                sql = ("REPLACE INTO family_history (policy_number, condition_name, diagnosed, condition_type) VALUES "
+                       "(%s, %s, %s, %s)")
                 cursor.execute(sql, (medical_survey.policy_number, condition, int(data['diagnosed']), data['type']))
             else:
                 sql = "REPLACE INTO family_history (policy_number, condition_name, diagnosed) VALUES (%s, %s, %s)"
@@ -77,7 +76,7 @@ def add_medical_survey(medical_survey):
         conn.close()
 
 
-def get_medical_survey(policy_number):
+def get_medical_survey(policy_number: str) -> Optional[MedicalSurvey]:
     conn = mysql.connector.connect(
         host=MYSQL_HOST,
         user=MYSQL_USER,
@@ -89,7 +88,7 @@ def get_medical_survey(policy_number):
         # Получаем основную информацию об опросе из таблицы medical_survey
         sql = "SELECT * FROM medical_survey WHERE policy_number = %s"
         cursor.execute(sql, (policy_number,))
-        medical_survey_data = cursor.fetchone()
+        medical_survey_data = cursor.fetchone() 
 
         if medical_survey_data:
             # Создаем объект MedicalSurvey и заполняем его данными
@@ -133,7 +132,6 @@ def get_medical_survey(policy_number):
                 else:
                     survey.set_family_history(condition[0], bool(condition[1]))
 
-
             # Получаем данные о симптомах из таблицы symptoms
             sql = "SELECT symptom_name, present FROM symptoms WHERE policy_number = %s"
             cursor.execute(sql, (policy_number,))
@@ -166,7 +164,8 @@ def get_medical_survey(policy_number):
 
 # Пример использования
 if __name__ == "__main__":
-    survey1 = MedicalSurvey("123412341234", "01-01-2024", "Уву Имя Отчество", "Муж", "01-01-2005", "19", "Медицинская Организация", "ФИО Позиция")
+    survey1 = MedicalSurvey("123412341234", "01-01-2024", "Уву Имя Отчество", "Муж", "01-01-2005", "19",
+                            "Медицинская Организация", "ФИО Позиция")
     survey1.set_condition('hypertension', True, True)
     survey1.set_condition('ischemic_heart_disease', True)
     survey1.set_condition('cerebrovascular_disease', False)
@@ -175,7 +174,7 @@ if __name__ == "__main__":
     survey1.set_condition('diabetes', diagnosed=True, medication=False)
     survey1.set_condition('stomach_disease', False)
     survey1.set_condition('chronic_kidney_disease', True)
-    survey1.set_condition('canser', True, "Рак Жопы")
+    survey1.set_condition('cancer', True, "Рак Жопы")
     survey1.set_health_event('myocardial_infarction', True)
     survey1.set_family_history('cancer', True, "Рак простаты")
     survey1.set_symptom('chest_pain', True)
@@ -188,4 +187,5 @@ if __name__ == "__main__":
     # Создание объекта MedicalSurvey
     add_medical_survey(survey1)  # Добавление объекта в базу данных
     survey2 = get_medical_survey("123412341234")
-    survey2.print_fields()
+    if survey2 is not None:
+        survey2.print_fields()
