@@ -2,20 +2,20 @@ from enum import Enum
 class Question():
     def __init__(self, id, question_text, question_type, has_options, options, next_question_id=None, previous_question_id=None, parent_question_id = None):
         self.id : int = id
-        self.question_text = question_text
-        self.question_type = question_type
-        self.has_options = has_options
-        self.options = options
-        self.next_question_id = next_question_id
-        self.previous_question_id = previous_question_id
-        self.parent_question_id = parent_question_id
+        self.question_text: str = question_text
+        self.question_type: str = question_type
+        self.has_options: bool = has_options
+        self.options: tuple[str] | None = options
+        self.next_question_id: int | None = next_question_id
+        self.previous_question_id: int | None = previous_question_id
+        self.parent_question_id: int | None = parent_question_id
 
 class QuestionType(Enum):
     TEXT = "String"
     DATE = "Date"
     CHOICE = "Choice"
     # Создание словаря вопросов
-questions = {
+questions: dict[int, Question] = {
     0: Question(0, "Пожалуйста, введите номер вашего полиса:", "String", False, None, 1, None),
     1: Question(1, "1. Дата анкетирования (день-месяц-год):", "Choice", True, ("Да", "Нет"), 2, None),
     2: Question(2, "1_1. Введите дату анкетирования. Формат день-месяц-год, например, 01-12-2023", "Date", False, None, 3, 1, 1),
@@ -102,7 +102,7 @@ questions = {
                  "сообщить врачу (фельдшеру)", "Choice", True, ("Да", "Нет"), None, 48),
 }
 
-def get_next_question_id_by_id(answer, id):
+def get_next_question_id_by_id(answer: str, id: int):
     child_question_is_yes = [8, 15, 19, 21, 25, 27, 40]
     child_question_is_no = [1]
     if id in questions:
@@ -118,13 +118,15 @@ def get_next_question_id_by_id(answer, id):
                 return question.next_question_id
     return None
 
-def get_question_by_id(id) -> Question | None:
+def get_question_by_id(id: int) -> Question | None:
     if id in questions:
         return questions[id]
     return None
-def get_last_question_by_id(id) -> Question | None:
+def get_last_question_by_id(id: int) -> Question | None:
     if id in questions:
         question = questions[id]
+        if question.previous_question_id is None:  # Add a check for None
+            return None
         last_question = get_question_by_id(question.previous_question_id)
         if last_question:
             if not last_question.parent_question_id:  # Add a check for last_question
@@ -134,14 +136,16 @@ def get_last_question_by_id(id) -> Question | None:
                 return last_question
 
     return None
-def get_next_question_by_id(id, answer) -> Question | None:
+def get_next_question_by_id(id: int, answer: str) -> Question | None:
     next_id = get_next_question_id_by_id(answer, id)
+    if next_id is None:
+        return None
     return get_question_by_id(next_id)
 
-def get_first_question():
+def get_first_question() -> Question:
     return questions[0]
 
-def get_question_type(id) -> QuestionType | None:
+def get_question_type(id: int) -> QuestionType | None:
     if questions[id].question_type == QuestionType.CHOICE.value:
         return QuestionType.CHOICE
     elif questions[id].question_type == QuestionType.DATE.value:

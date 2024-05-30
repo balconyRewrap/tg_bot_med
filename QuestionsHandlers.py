@@ -3,7 +3,7 @@ from datetime import datetime
 from MedicalSurvey import MedicalSurvey
 
 
-fields_dict = {
+fields_dict: dict[int, str] = {
     0: 'policy_number',
     1: 'nothing',
     2: 'survey_date',
@@ -81,7 +81,7 @@ def handle_answer(question_id: int, survey: MedicalSurvey, message):
     elif question_id == 49:
         handle_q49(questions[question_id], survey, message)
 
-def save_survey_date(survey):
+def save_survey_date(survey: MedicalSurvey):
     current_date = datetime.now()
     formatted_date = current_date.strftime("%d-%m-%Y")
     survey.survey_date = formatted_date
