@@ -2,12 +2,14 @@ import telebot
 from telebot import types
 from config import TG_TOKEN, TG_ADMINS_ID
 from MedicalSurvey import MedicalSurvey
-from QuestionsHandlers import get_first_question, get_next_question_by_id, Question, QuestionType, save_survey_date, handle_answer, get_question_by_id, get_next_question_id_by_id, get_last_question_by_id
+from Questions import Question, get_first_question, get_next_question_by_id, get_question_by_id, get_next_question_id_by_id, get_last_question_by_id
+from QuestionsHandlers import  Question, QuestionType, save_survey_date, handle_answer
 from datetime import datetime
 from DatabaseManager import add_medical_survey
 bot = telebot.TeleBot(TG_TOKEN)
 survey = MedicalSurvey("")
 
+# Словарь для хранения ответов пользователей
 user_answers = {"user_id": 0, "answer_id": -1, "answer": ""}
 
 def get_keyboard(question: Question) -> types.ReplyKeyboardMarkup:
@@ -120,14 +122,5 @@ def handle_message(message):
     else:
         bot.send_message(chat_id, "Чтобы начать анкету, введите /start")
 
-bot.polling()
-
-
-
-
-    
-
-
-
-
+# Запускаем бота
 bot.polling()
