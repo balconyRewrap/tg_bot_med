@@ -1,6 +1,6 @@
 from typing import Optional, Union, Tuple 
 class MedicalSurvey:
-    def __init__(self, policy_number: str, survey_date: Optional[str] = None, patient_name: Optional[str] = None,
+    def __init__(self, policy_number: Optional[str], survey_date: Optional[str] = None, patient_name: Optional[str] = None,
                  gender: Optional[str] = None, birth_date: Optional[str] = None, age: Optional[int] = None,
                  medical_organization: Optional[str] = None, doctor_name: Optional[str] = None) -> None:
         self.policy_number = policy_number
@@ -12,15 +12,15 @@ class MedicalSurvey:
         self.medical_organization = medical_organization
         self.doctor_name = doctor_name
 
-        self.conditions = {
+        self.conditions  = {
             'hypertension': {'diagnosed': False, 'medication': False},
-            'ischemic_heart_disease': False,
-            'cerebrovascular_disease': False,
-            'chronic_lung_disease': False,
-            'tuberculosis': False,
+            'ischemic_heart_disease': {'diagnosed': False},
+            'cerebrovascular_disease': {'diagnosed': False},
+            'chronic_lung_disease': {'diagnosed': False},
+            'tuberculosis': {'diagnosed': False},
             'diabetes': {'diagnosed': False, 'medication': False},
-            'stomach_disease': False,
-            'chronic_kidney_disease': False,
+            'stomach_disease': {'diagnosed': False},
+            'chronic_kidney_disease': {'diagnosed': False},
             'cancer': {'diagnosed': False, 'type': ''},
             'high_cholesterol': {'diagnosed': False, 'medication': False}
         }
@@ -30,8 +30,8 @@ class MedicalSurvey:
             'stroke': False
         }
 
-        self.family_history: dict[str, Union[bool, dict[str, Union[bool, str]]]] = {
-            'heart_attack_or_stroke': False,
+        self.family_history = {
+            'heart_attack_or_stroke': {'diagnosed': False},
             'cancer': {'diagnosed': False, 'type': ''},
         }
 
@@ -41,6 +41,7 @@ class MedicalSurvey:
             'sudden_weakness': False,
             'sudden_numbness': False,
             'sudden_vision_loss': False,
+            'sudden_one_eye_vision_loss': False,
             'chronic_cough': False,
             'wheezing': False,
             'coughing_blood': False,
@@ -54,7 +55,7 @@ class MedicalSurvey:
         self.lifestyle: dict[str, Union[bool, int]] = {
             'smoking': False,
             'cigarettes_per_day': 0,
-            'walking_minutes_per_day': 0,
+            'walking_minutes_per_day': False,
             'vegetable_fruit_intake': False,
             'salt_habit': False,
             'drug_use': False,
@@ -85,6 +86,7 @@ class MedicalSurvey:
             'sudden_weakness': 'Внезапная слабость',
             'sudden_numbness': 'Внезапное онемение',
             'sudden_vision_loss': 'Внезапная потеря зрения',
+            'sudden_one_eye_vision_loss': 'Внезапная потеря зрения на один глаз',
             'chronic_cough': 'Хронический кашель',
             'wheezing': 'Свист в груди',
             'coughing_blood': 'Кашель с кровью',
@@ -105,32 +107,45 @@ class MedicalSurvey:
             'score': 'Оценка'
         }
 
+    def set_policy_number(self, policy_number: str) -> None:
+        self.policy_number = policy_number
+    def set_survey_date(self, survey_date: str) -> None:
+        self.survey_date = survey_date
+    def set_patient_name(self, patient_name: str) -> None:
+        self.patient_name = patient_name
+    def set_gender(self, gender: str) -> None:
+        self.gender = gender
+    def set_birth_date(self, birth_date: str) -> None:
+        self.birth_date = birth_date
+    def set_age(self, age: int) -> None:
+        self.age = age
+    def set_medical_organization(self, medical_organization: str) -> None:
+        self.medical_organization = medical_organization
+    def set_doctor_name(self, doctor_name: str) -> None:
+        self.doctor_name = doctor_name
     def set_condition(self, condition: str, diagnosed: bool, medication: bool = False, type: str = '') -> None:
         if condition in self.conditions:
-            if isinstance(self.conditions[condition], dict):
-                if condition == 'cancer':
-                    self.conditions[condition]['diagnosed'] = diagnosed
-                    if type != '':
-                        self.conditions[condition]['type'] = type
-                else:
-                    self.conditions[condition]['diagnosed'] = diagnosed
-                    if medication is not None:
-                        self.conditions[condition]['medication'] = medication
+            if condition == 'cancer':
+                self.conditions[condition]['diagnosed'] =diagnosed
+                if type != '':
+                    self.conditions[condition]['type'] =type
             else:
-                self.conditions[condition] = diagnosed
+                self.conditions[condition]['diagnosed'] =diagnosed
+                if medication is not None:
+                    self.conditions[condition]['medication']  =medication
+
 
     def set_health_event(self, event: str, occurred: bool) -> None:
         if event in self.health_events:
             self.health_events[event] = occurred
 
-    def set_family_history(self, condition: str, present: bool, details: Optional[str] = None) -> None:
+    def set_family_history(self, condition: str, diagnosed: bool, type: Optional[str] = None) -> None:
         if condition in self.family_history:
-
             if condition == 'cancer':
-                if details != None:
-                    self.family_history['cancer'] = {'diagnosed': present, 'type': details}
+                if type != None:
+                    self.family_history['cancer'] = {'diagnosed': diagnosed, 'type': type}
             else:
-                self.family_history[condition] = present
+                self.family_history[condition] = {'diagnosed': diagnosed}
 
     def set_symptom(self, symptom: str, present: bool) -> None:
         if symptom in self.symptoms:
@@ -142,6 +157,8 @@ class MedicalSurvey:
                 if value not in range(0, 5):
                     raise ValueError(f"{habit} must be between 0 and 4")
             self.lifestyle[habit] = value
+            self.calculate_score()
+
 
     def calculate_score(self) -> None:
         self.lifestyle['score'] = self.lifestyle['alcohol_frequency'] + self.lifestyle['alcohol_portions'] + \
@@ -150,7 +167,7 @@ class MedicalSurvey:
     def set_additional_complaints(self, complaints: bool) -> None:
         self.additional_complaints = complaints
 
-    def format_data_as_html(self) -> Tuple[str, str, str, str, str, str, str]:
+    def __get_main_data_html(self) -> str:
         formatted_data_main: str = "<b>Информация об анкете пациенте с номером полиса:</b>" + f"{self.policy_number}\n\n"
         formatted_data_main += f"<b>Дата Прохождения Диспансеризации:</b> {self.survey_date}\n"
         formatted_data_main += f"<b>Ф.И.О. Пациента:</b> {self.patient_name}\n"
@@ -160,13 +177,14 @@ class MedicalSurvey:
         formatted_data_main += f"<b>Медицинская Организация:</b> {self.medical_organization}\n"
         formatted_data_main += (f"<b>Должность и Ф.И.О. медицинского работника, проводящего анкетирование и подготовку "
                                 f"заключения по его результатам: :</b> {self.doctor_name}\n")
-
+        return formatted_data_main
+    
+    def __get_condition_data_html(self) -> str:
         formatted_data_conditions: str = "<b>Говорил ли когда-либо пациенту врач, что у него имеется:</b>\n"
         for condition, data in self.conditions.items():
             if condition == 'hypertension' or condition == 'diabetes' or condition == 'high_cholesterol':
 
                 formatted_data_conditions += f"<b>{self.translations[condition]}</b>: "
-
                 if data['diagnosed']:
                     formatted_data_conditions += "Диагностировано"
                     formatted_data_conditions += ", "
@@ -189,11 +207,17 @@ class MedicalSurvey:
             else:
                 formatted_data_conditions += (f"<b>{self.translations[condition]}</b>: " +
                                               f"{'Диагностировано' if data else 'Не диагностировано'}\n")
+        return formatted_data_conditions
+    
+    def __get_health_events_data_html(self) -> str:
         formatted_data_health_events: str = ""
         formatted_data_health_events += "<b>Произошли ли у пациента следующие события:</b>\n"
         for event, occurred in self.health_events.items():
             formatted_data_health_events += (f"<b>{self.translations[event]}</b>: "
                                              + f"{'Произошло' if occurred else 'Не произошло'}\n")
+        return formatted_data_health_events
+    
+    def __get_family_history_data_html(self) -> str:
         formatted_data_family_history: str = ""
         formatted_data_family_history += "Были ли у близких родственников пациента следующие события:\n"
         for condition, present in self.family_history.items():
@@ -206,6 +230,9 @@ class MedicalSurvey:
             else:
                 formatted_data_family_history += (f"<b>{self.translations[condition]}</b>: " +
                                                   f"{f'Было.' if present else 'Не было'}\n")
+        return formatted_data_family_history
+
+    def __get_symptoms_data_html(self) -> str:
         formatted_data_symptoms: str = ""
         formatted_data_symptoms += "Возникало ли у пациента следующее:\n"
         for symptom, present in self.symptoms.items():
@@ -227,7 +254,9 @@ class MedicalSurvey:
             else:
                 formatted_data_symptoms += (f"<b>{self.translations[symptom]}</b>: " +
                                             f"{f'Возникало.' if present else 'Не возникало'}\n")
+        return formatted_data_symptoms
 
+    def __get_lifestyle_data_html(self) -> str:
         formatted_data_lifestyle: str = ""
         formatted_data_lifestyle += "Стиль жизни пациента:\n"
         for habit, value in self.lifestyle.items():
@@ -242,7 +271,7 @@ class MedicalSurvey:
                     formatted_data_lifestyle += "<b>Пациент не курит</b>"
             elif habit == 'walking_minutes_per_day':
                 formatted_data_lifestyle += ("<b>Пациент гуляет:</b> " +
-                                             f"{'Более 30 минут в день' if value == 30 else 'Менее 30 минут в день'}\n")
+                                             f"{'Более 30 минут в день' if value else 'Менее 30 минут в день'}\n")
             elif habit == 'vegetable_fruit_intake':
                 if value:
                     formatted_data_lifestyle += ("<b>В ежедневном рационе пациента присутствует 400-500 г сырых овощей "
@@ -303,18 +332,28 @@ class MedicalSurvey:
                     formatted_data_lifestyle += "≥ 4 раз в неделю (4 балла)  \n"
             elif habit == 'score':
                 formatted_data_lifestyle += f"<b>Итоговая сумма баллов равна</b> {value}"
+        return formatted_data_lifestyle
 
+    def __get_additional_complaints_data_html(self) -> str:
+        formatted_data_additional_complaints: str = ""
         if self.additional_complaints:
-            formatted_data_additional_complaints = ("<b>У пациента есть другие жалобы на свое здоровье, не вошедшие в "
-                                                    "настоящую анкету и которые он бы хотел сообщить врачу ("
-                                                    "фельдшеру)</b>\n")
+            formatted_data_additional_complaints = "<b>У Пациента есть другие жалобы на свое здоровье, не вошедшие в настоящую анкету и о которых пациент хотел бы сообщить врачу (фельдшеру)</b>\n"
         else:
-            formatted_data_additional_complaints = ("<b>У пациента нет других жалобы на свое здоровье, не вошедшие в "
-                                                    "настоящую анкету и которые он бы хотел сообщить врачу ("
-                                                    "фельдшеру)</b>\n")
-        return (formatted_data_main, formatted_data_conditions, formatted_data_health_events,
-                formatted_data_family_history, formatted_data_symptoms,
-                formatted_data_lifestyle, formatted_data_additional_complaints)
+            formatted_data_additional_complaints = "<b>У Пациента нет других жалоб на свое здоровье, не вошедших в настоящую анкету и о которых пациент хотел бы сообщить врачу (фельдшеру)</b>\n"
+        return formatted_data_additional_complaints
+
+    def format_data_as_html(self) -> Tuple[str, str, str, str, str, str, str]:
+        formatted_main_data: str = self.__get_main_data_html()
+        formatted_condition_data: str = self.__get_condition_data_html()
+        formatted_health_events_dsata: str = self.__get_health_events_data_html()
+        formatted_family_history_data: str = self.__get_family_history_data_html()
+        formatted_symptoms_data: str = self.__get_symptoms_data_html()
+        formatted_lifestyle_data: str = self.__get_lifestyle_data_html()
+        formatted_data_additional_complaiments: str = self.__get_additional_complaints_data_html()
+        
+        return (formatted_main_data, formatted_condition_data, formatted_health_events_dsata,
+                formatted_family_history_data, formatted_symptoms_data,
+                formatted_lifestyle_data, formatted_data_additional_complaiments)
 
     def print_fields(self):
         print("Medical Survey")
@@ -350,3 +389,32 @@ class MedicalSurvey:
         for habit, value in self.lifestyle.items():
             print(f"  {habit}: {value}")
         print("Additional Complaints:", self.additional_complaints)
+
+
+"""
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠔⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠠⡀⠀⠀⠀⠀⢤⡈⢦⡈⠙⠢⣀⠀⠀⠀⣠⣴⣾⡇⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢆⠀⠀⠀⠐⡝⢄⠙⢄⠀⠈⠢⡀⣼⣿⡃⢘⣿⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⣾⡳⠶⣤⣀⣾⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢷⡀⠀⠀⠈⡄⠙⠪⣳⠀⠀⠹⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⢸⣧⣴⣿⢿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⡄⢳⡄⠀⠀⠘⣆⠀⠀⠑⢄⠀⢸⣿⣿⣿⡟⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⢿⣿⡟⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣇⠀⠀⢹⡀⢻⡀⠀⠀⠘⢦⠀⠀⠀⠳⣼⣿⣿⣿⣧⣄⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠈⢿⣷⠀⠀⠀⢀⡎⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⢇⠈⣷⠀⠈⢦⡈⢳⡀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣦⡀⠀⠀
+⠀⠀⢀⣤⣶⡿⠀⠀⠀⠀⡼⠇⠀⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣆⠈⢣⡘⡆⠀⠀⠙⡆⡙⢆⠀⠀⠀⠀⠈⠩⢍⡉⠉⠓⠀⠀
+⠀⣠⣿⠿⡿⠁⠀⠀⠀⣰⠁⠀⢰⠻⣄⡀⠀⠀⠀⠀⠀⣸⡇⢀⣿⠁⠀⠀⠙⣿⠀⠀⠀⢱⠐⠀⠳⣄⠀⠐⠒⠒⠂⠠⠔⠂⠀⠀
+⠀⠉⠀⡼⢁⠆⡆⠀⡴⠋⠀⣷⠏⠉⠹⡷⡄⢀⠀⠀⢀⠏⣇⣜⡇⠀⠀⣀⣀⣸⡆⠀⠀⢸⣾⠀⢺⣄⠙⢦⣀⣀⠀⠀⢢⠀⠀⠀
+⠀⠀⠈⠀⣜⡼⣡⣾⠀⢺⠀⡏⠀⠀⠀⠁⠈⢺⣧⠀⢸⢀⡿⠙⠡⣴⣿⣿⣿⡟⡿⠁⠀⠀⣷⡇⢸⢿⠀⠀⠻⡍⠙⠷⢀⠃⠀⠀
+⠠⠀⠀⠀⠨⠀⡇⢸⠀⠘⡄⣇⣠⣴⣶⣶⣿⣄⡘⢷⣼⡖⠃⠀⠘⠉⠿⠛⠛⠁⠁⠀⠀⠀⣿⣷⠈⣯⠀⠀⠀⡌⢆⠀⠀⠁⠀⠀
+⠀⠀⠀⠀⠀⠀⠃⢸⡆⠀⢹⣿⡿⠁⠙⠿⠟⠛⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠀⢠⡀⢠⠁⠀⣿⣩⣧⢻⠣⡀⠀⢱⠀⡧⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⡏⢣⠀⢸⣹⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡼⠀⣼⣿⠁⠈⢫⣇⣹⣷⡦⣷⡖⠤⣄⠀⠀
+⠀⠀⠀⠀⠀⠀⣾⡇⠈⡆⢸⠟⠋⢧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡞⢹⡇⢠⣿⠛⡀⠀⠈⣿⣿⠈⠒⠺⣽⢷⣄⣳⡀
+⠀⠀⠀⠀⠀⠀⠈⢳⠀⢸⣏⠀⠐⣿⣆⠀⠀⠀⠀⠀⢀⣀⡤⠄⠀⠀⢀⠀⠈⠀⡿⠀⣼⡇⢀⣿⣄⣇⢻⢿⣳⠀⠀⠘⣆⠀⢻⡇
+⠀⠀⠀⠀⢀⡠⢚⣿⣆⡞⢿⡀⠀⠉⠛⠳⢄⡀⠀⠀⠘⠿⢀⣀⡀⠤⠊⠀⢀⣼⠃⢰⣿⠀⣾⣿⣌⣿⡾⠀⠙⢳⡀⠀⠈⣆⠀⠇
+⠀⠀⠀⡰⠋⡠⠋⢀⡟⢹⠀⢿⠒⣤⡀⠀⠀⠈⠑⠒⠤⢄⠀⠀⠀⠀⣠⡶⢛⡏⢠⣿⢻⡾⠃⠈⡟⢿⠃⢀⢱⡀⢧⠀⠀⠘⡆⠀
+⠀⠀⢰⢃⡎⠀⠀⠀⢳⠈⡇⠈⢣⡸⡉⢦⣀⠀⠀⠀⠀⠀⠑⣦⣴⣿⡿⠁⣼⡴⠋⠏⣼⡇⠀⠀⢳⢸⣧⠸⠀⠳⣼⡆⠀⠀⡟⠀
+⠀⠀⠸⠀⠱⡄⠀⠀⠈⣇⢹⡀⠀⣿⣽⣄⣿⢷⡄⠀⠀⠀⠀⣿⣿⠏⠀⣰⠏⠀⠀⠘⢁⠇⠀⠀⢸⠄⢻⣦⡇⠀⡟⢳⠀⠸⠁⠀
+⠀⠀⠀⠀⠀⠘⢆⠀⠀⠘⡄⢧⠀⢸⣦⠉⢻⡏⠀⠀⠀⠀⢰⡿⡏⠀⠐⠁⠀⠀⠀⠀⢸⠀⠀⠀⡼⠀⢘⣿⠁⠠⠀⡎⣰⠂⠀⠀
+⠀⠀⠀⠀⠀⠀⠈⢆⡀⠀⠘⣾⣧⠀⢿⣵⡞⠀⠀⠀⠀⠀⡟⠀⠉⠀⠀⠀⠀⠀⠀⢀⡿⠀⠀⡴⠁⢀⠞⢹⠀⢀⠜⡰⠃⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠈⢻⡀⠀⢸⡇⠀⢸⡟⠀⠀⠀⠀⠀⣸⠁⠀⡀⠀⠀⠀⠀⡠⠔⣹⠃⢀⡜⠀⡰⠋⢀⡟⠀⠎⣰⠃⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧⠀⠘⡇⠀⡾⠁⠀⠀⠀⠀⢠⠋⡇⠀⠀⠀⠀⠀⠋⠀⠀⠁⡠⠊⢠⠊⠀⢀⠞⠀⣠⡾⠋⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠉⠒⠦⠜⣆⢀⣷⡞⠀⠀⠀⠀⠀⠀⡿⡄⢷⠀⠀⠀⠀⠀⠀⢀⣤⠞⢁⠔⠉⠉⢰⣋⣴⣿⠏⠁⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⢀⡠⠔⠂⠤⣤⣸⣿⣿⣷⣦⣄⣀⡀⠀⣸⡇⠘⢾⣆⠀⠀⠀⠀⣰⡟⢁⡴⠁⢀⣀⣴⣿⡟⢡⠏⠀⠀⠀⠀⠀⠀⠀⠀
+"""
