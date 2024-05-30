@@ -14,14 +14,13 @@ user_answers = {"user_id": 0, "answer_id": -1, "answer": ""}
 
 def get_keyboard(question: Question) -> types.ReplyKeyboardMarkup:
     keyboard = types.ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
-    if question.has_options:
+    if question.options is not None:
         for option in question.options:
             keyboard.add(types.KeyboardButton(text=option))
     keyboard.add(types.KeyboardButton(text="Назад"))
     return keyboard
 
-# Функция для сохранения ответа пользователя
-def save_answer(current_question_id: int, message) -> bool:
+def save_answer(current_question_id: int, message: telebot.types.Message) -> bool:
     global survey
     if current_question_id == 0:
         save_survey_date(survey)
@@ -40,14 +39,13 @@ def save_answer(current_question_id: int, message) -> bool:
         return True
     return False
 
-def change_user_state(next_question_id: int, message):
+def change_user_state(next_question_id: int, message: telebot.types.Message):
     user_answers["answer_id"] = next_question_id
     user_answers["answer"] = message.text
 
 
 
-# Функция для отправки вопроса пользователю
-def send_question(chat_id, question):
+def send_question(chat_id: int, question: Question):
     formatted_date = ""
     if question.id == 1:
         current_date = datetime.now()
@@ -70,7 +68,6 @@ def back(message: telebot.types.Message) -> None:
         send_question(message.chat.id, last_question)
 
 def finish_registration(survey: MedicalSurvey, message: telebot.types.Message) -> None:
-    # Вывод всех данных
     survey.print_fields()
     add_medical_survey(survey)
     bot.send_message(message.chat.id, "Ваши данные успешно сохранены:\n")
@@ -89,23 +86,24 @@ def finish_registration(survey: MedicalSurvey, message: telebot.types.Message) -
         bot.send_message(id, formatted_data_additional_complaints, parse_mode='HTML')
 
 
-# Обработчик ответов от пользователя
 @bot.message_handler(func=lambda message: True)
-def handle_message(message):
+def handle_message(message: telebot.types.Message):
     global survey
     global user_answers
     chat_id = message.chat.id
     answer_id = user_answers["answer_id"]
     if answer_id in range(0, 50):
         current_question_id = user_answers["answer_id"]
-        next_question = get_next_question_by_id(current_question_id, message.text)
-        next_question_id = get_next_question_id_by_id(answer = message.text, id = current_question_id)
+        next_question = get_next_question_by_id(current_question_id, message.text or "")
+        next_question_id = get_next_question_id_by_id(answer=message.text or "", id=current_question_id)
+        
         if next_question and next_question_id:
             has_error = save_answer(current_question_id, message)
             if has_error:
                 current_question = get_question_by_id(current_question_id)
                 change_user_state(current_question_id, message)
-                send_question(chat_id, current_question)
+                if current_question:
+                    send_question(chat_id, current_question)
             else:
                 change_user_state(next_question_id, message)
                 send_question(chat_id, next_question)
@@ -114,7 +112,8 @@ def handle_message(message):
             if has_error:
                 current_question = get_question_by_id(current_question_id)
                 change_user_state(current_question_id, message)
-                send_question(chat_id, current_question)
+                if current_question:
+                    send_question(chat_id, current_question)
             else:
                 change_user_state(-1, message)
             bot.send_message(chat_id, "Спасибо за заполнение анкеты!")
@@ -122,5 +121,4 @@ def handle_message(message):
     else:
         bot.send_message(chat_id, "Чтобы начать анкету, введите /start")
 
-# Запускаем бота
 bot.polling()
