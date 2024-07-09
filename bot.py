@@ -9,7 +9,7 @@ from DatabaseManager import add_medical_survey
 bot = telebot.TeleBot(TG_TOKEN)
 survey = MedicalSurvey("")
 
-# Словарь для хранения ответов пользователей
+
 user_answers = {"user_id": 0, "answer_id": -1, "answer": ""}
 
 def get_keyboard(question: Question) -> types.ReplyKeyboardMarkup:
