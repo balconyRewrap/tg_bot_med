@@ -14,8 +14,8 @@ class QuestionType(Enum):
     TEXT = "String"
     DATE = "Date"
     CHOICE = "Choice"
-    # Создание словаря вопросов
 questions: dict[int, Question] = {
+    # start main info
     0: Question(0, "Пожалуйста, введите номер вашего полиса:", "String", False, None, 1, None),
     1: Question(1, "1. Дата анкетирования (день-месяц-год):", "Choice", True, ("Да", "Нет"), 2, None),
     2: Question(2, "1_1. Введите дату анкетирования. Формат день-месяц-год, например, 01-12-2023", "Date", False, None, 3, 1, 1),
@@ -24,9 +24,9 @@ questions: dict[int, Question] = {
     5: Question(5, "4. Дата рождения. Формат день-месяц-год, например, 01-12-2023:", "Date", False, None, 6, 4),
     6: Question(6, "5. Медицинская организация:", "String", False, None, 7, 5),
     7: Question(7, "6. Должность и Ф.И.О. медицинского работника, проводящего анкетирование и подготовку заключения по его результатам:", "String", False, None, 8, 6),
-    # Конец главной информации
+    # end main info
 
-    # Начало conditions
+    # start conditions
     8: Question(8, "7. Говорил ли Вам врач когда-либо, что у Вас имеется гипертоническая болезнь (повышенное артериальное давление)?", "Choice", True, ("Да", "Нет"), 9, 8),
     9: Question(9, "7_1. Если «Да», то принимаете ли Вы препараты для снижения давления?", "Choice", True, ("Да", "Нет"), 10, 8, 8),
     10: Question(10, "8. Имеется ли у вас ишемическая болезнь сердца (стенокардия)?", "Choice", True, ("Да", "Нет"), 11, 9),
@@ -41,21 +41,21 @@ questions: dict[int, Question] = {
     19: Question(19, "15_1. Если «Да», то какое?", "String", False, None, 20, 18, 18),
     20: Question(20, "16. Имеется ли у вас повышенный уровень холестерина?", "Choice", True, ("Да", "Нет"), 21, 18),
     21: Question(21, "16_1. Если «Да», то принимаете ли Вы препараты для снижения уровня холестерина?", "Choice", True, ("Да", "Нет"), 22, 20, 20),
+    # end conditions
+    
 
-    # Конец conditions главной информации
-
-    # Начало Health_event
+    # start Health_event
     22: Question(22, "17. Был ли у Вас инфаркт миокарда?", "Choice", True, ("Да", "Нет"), 23, 21),
     23: Question(23, "18. Был ли у Вас инсульт?", "Choice", True, ("Да", "Нет"), 24, 22),
-    # Конец Health_event
+    # end Health_event
 
-    # Начало family_history
+    # start family_history
     24: Question(24, "19. Был ли инфаркт миокарда или инсульт у Ваших близких родственников в молодом или среднем возрасте (до 65 лет у матери или родных сестер или до 55 лет у отца или родных братьев)?", "Choice", True, ("Да", "Нет"), 25, 23),
     25: Question(25, "20. Были ли у Ваших близких родственников в молодом или среднем возрасте злокачественные новообразования (легкого, желудка, кишечника, толстой или прямой кишки, предстательной железы, молочной железы, матки, опухоли других локализаций) или полипоз желудка, семейный аденоматоз/диффузный полипоз толстой кишки?", "Choice", True, ("Да", "Нет"), 26, 24),
     26: Question(26, "20_1. Напишите, какое конкретно злокачественное новообразование у ваших близких родственников было: легкого, желудка, кишечника, толстой или прямой кишки, предстательной железы, молочной железы, матки, опухоли других локализаций) или полипоз желудка, семейный аденоматоз/диффузный полипоз толстой кишки?", "String", False, None, 27, 25, 25),
-    # Конец family_history
+    # end family_history
 
-    # Начало symptoms
+    # start symptoms
     27: Question(27, "21. Возникает ли у Вас, когда поднимаетесь по лестнице, идете в гору или спешите, или при выходе из теплого "
             "помещения на холодный воздух, боль или ощущение давления, жжения, тяжести или явного дискомфорта за грудиной "
             "и (или) в левой половине грудной клетки, и (или) в левом плече, и (или) в левой руке?", "Choice", True, ("Да", "Нет"), 28, 25),
@@ -76,9 +76,9 @@ questions: dict[int, Question] = {
     37: Question(37, "30. Бывают ли у Вас запоры?", "Choice", True, ("Да", "Нет"), 38, 36),
     38: Question(38, "31. Бывает ли у Вас боль в области заднепроходного отверстия?", "Choice", True, ("Да", "Нет"), 39, 37),
     39: Question(39, "32. Бывают ли у Вас кровяные выделения с калом?", "Choice", True, ("Да", "Нет"), 40, 38),
-    # Конец symptoms
+    # end symptoms
 
-    # Начало lifestyle
+    # start lifestyle
     40: Question(40, "33. Курите ли Вы? (курение одной и более сигарет в день)", "Choice", True, ("Да", "Нет"), 41, 39),
     41: Question(41, "33_1. Сколько в среднем сигарет в день выкуриваете?", "String", False, None, 42, 40, 40),
     42: Question(42, "34. Сколько минут в день Вы тратите на ходьбу в умеренном или быстром темпе (включая дорогу до места "
@@ -95,11 +95,12 @@ questions: dict[int, Question] = {
     48: Question(48, "40. Как часто Вы употребляете за один раз 6 или более порций? 6 порций равны ИЛИ 180 мл крепкого алкоголя ("
             "водки) ИЛИ 600 мл сухого вина ИЛИ 1,8 л пива", "Choice", True, ("Никогда (0 баллов)", "Раз в месяц и реже (1 балл)", "2-4 раза в месяц (2 балла)",
             "2-3 раза в неделю (3 балла)", "≥ 4 раз в неделю (4 балла)"), 49, 47),
-    # Конец lifestyle
+    # end lifestyle
 
-    # Начало additional_complaints
+    # start additional_complaints
     49: Question(49, "41. Есть ли у Вас другие жалобы на свое здоровье, не вошедшие в настоящую анкету и которые Вы бы хотели "
                  "сообщить врачу (фельдшеру)", "Choice", True, ("Да", "Нет"), None, 48),
+    # end additional_complaints
 }
 
 def get_next_question_id_by_id(answer: str, id: int):
@@ -107,8 +108,8 @@ def get_next_question_id_by_id(answer: str, id: int):
     child_question_is_no = [1]
     if id in questions:
         question = questions[id]
-        if question.next_question_id is not None:  # Add a check for None
-            next_question = questions[int(question.next_question_id)]  # Convert to int
+        if question.next_question_id is not None:
+            next_question = questions[int(question.next_question_id)]
             if next_question.parent_question_id:
                 if (answer == 'Да' and id in child_question_is_yes) or (answer == 'Нет' and id in child_question_is_no):
                     return question.next_question_id
@@ -125,11 +126,11 @@ def get_question_by_id(id: int) -> Question | None:
 def get_last_question_by_id(id: int) -> Question | None:
     if id in questions:
         question = questions[id]
-        if question.previous_question_id is None:  # Add a check for None
+        if question.previous_question_id is None: 
             return None
         last_question = get_question_by_id(question.previous_question_id)
         if last_question:
-            if not last_question.parent_question_id:  # Add a check for last_question
+            if not last_question.parent_question_id:
                 return last_question
             else:
                 last_question = get_question_by_id(last_question.parent_question_id)
