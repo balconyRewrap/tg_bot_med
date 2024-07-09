@@ -1,12 +1,12 @@
-## ИСПОЛЬЗОВАНИЕ
-1. Установить MySQL
-2. Создать и войти в базу данных с помощью команды:
-``` MySQl
+## USAGE
+1. Install MySQL
+2. Create and access the database using the command:
+```MySQL
 CREATE DATABASE medical_survey_database;
 USE medical_survey_database;
 ```
-3. Создать Таблицы с помощью команды:
-``` MySQL
+3. Create the tables using the command:
+```MySQL
 CREATE TABLE medical_survey (
     policy_number VARCHAR(16) PRIMARY KEY,
     survey_date DATE,
@@ -62,15 +62,15 @@ CREATE TABLE lifestyle (
     FOREIGN KEY (policy_number) REFERENCES medical_survey(policy_number) ON DELETE CASCADE
 );
 ```
-4. Получить имя Хоста через команду:
-``` MySQL
+4. Get the hostname using the command:
+```MySQL
 SHOW VARIABLES LIKE 'hostname';
 ```
-5. Записать hostname данные в config.py
-6. Записать все необходимые поля в config.py
-7. Установить зависимости pip -r requirements.txt
-8. Запустить bot.py
+5. Enter the hostname data into config.py
+6. Fill in all necessary fields in config.py
+7. Install dependencies with pip -r requirements.txt
+8. Run bot.py
 ### DEPENDENCIES
  - Python 3.12
 ### TODO:
-- [x] Реализовать finite state machine (реализовать состояния)  
+- [x] Implement finite state machine (implement states)
