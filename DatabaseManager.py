@@ -22,7 +22,6 @@ def add_medical_survey(medical_survey: MedicalSurvey):
             birth_date = datetime.strptime(medical_survey.birth_date, '%d-%m-%Y').date()
         else:
             birth_date = None
-        # Добавляем основную информацию об опросе в таблицу medical_survey
         sql = ("REPLACE INTO medical_survey (policy_number, survey_date, patient_name, gender, birth_date, age, "
                "medical_organization, doctor_name, additional_complaints) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)")
         cursor.execute(sql, (
@@ -31,8 +30,6 @@ def add_medical_survey(medical_survey: MedicalSurvey):
             birth_date, medical_survey.age, medical_survey.medical_organization,
             medical_survey.doctor_name,
             int(medical_survey.additional_complaints)))
-        print(1)
-        # Добавляем данные о состояниях в таблицу conditions
         for condition, data in medical_survey.conditions.items():
             if condition == 'hypertension' or condition == 'diabetes' or condition == 'high_cholesterol':
                 sql = ("REPLACE INTO conditions (policy_number, condition_name, diagnosed, medication) VALUES (%s, %s, "
@@ -45,14 +42,9 @@ def add_medical_survey(medical_survey: MedicalSurvey):
             else:
                 sql = "REPLACE INTO conditions (policy_number, condition_name, diagnosed) VALUES (%s, %s, %s)"
                 cursor.execute(sql, (medical_survey.policy_number, condition, int(data['diagnosed'])))
-
-        print(2)
-        # Добавляем данные о событиях здоровья в таблицу health_events
         for event, occurred in medical_survey.health_events.items():
             sql = "REPLACE INTO health_events (policy_number, event_name, occurred) VALUES (%s, %s, %s)"
             cursor.execute(sql, (medical_survey.policy_number, event, int(occurred)))
-        print(3)
-        # Добавляем данные о семейном анамнезе в таблицу family_history
         for condition, data in medical_survey.family_history.items():
             if condition == 'cancer':
                 sql = ("REPLACE INTO family_history (policy_number, condition_name, diagnosed, condition_type) VALUES "
@@ -61,18 +53,12 @@ def add_medical_survey(medical_survey: MedicalSurvey):
             else:
                 sql = "REPLACE INTO family_history (policy_number, condition_name, diagnosed) VALUES (%s, %s, %s)"
                 cursor.execute(sql, (medical_survey.policy_number, condition, int(data['diagnosed'])))
-        print(4)
-        # Добавляем данные о симптомах в таблицу symptoms
         for symptom, present in medical_survey.symptoms.items():
             sql = "REPLACE INTO symptoms (policy_number, symptom_name, present) VALUES (%s, %s, %s)"
             cursor.execute(sql, (medical_survey.policy_number, symptom, int(present)))
-        print(5)
-        # Добавляем данные об образе жизни в таблицу lifestyle
         for habit, value in medical_survey.lifestyle.items():
             sql = "REPLACE INTO lifestyle (policy_number, habit_name, value) VALUES (%s, %s, %s)"
             cursor.execute(sql, (medical_survey.policy_number, habit, int(value)))
-        print(6)
-        # Подтверждаем изменения в базе данных
         conn.commit()
         print("Объект MedicalSurvey успешно добавлен в базу данных!")
     except mysql.connector.Error as error:
@@ -158,7 +144,6 @@ def get_medical_survey(policy_number: str) -> Optional[MedicalSurvey]:
     except mysql.connector.Error as error:
         print("Ошибка при получении объекта MedicalSurvey из базы данных:", error)
     finally:
-        # Закрываем курсор и соединение
         cursor.close()
         conn.close()
 
@@ -184,8 +169,7 @@ if __name__ == "__main__":
     survey1.set_lifestyle('alcohol_frequency', 4)
     survey1.set_lifestyle('score', 4)
     survey1.set_additional_complaints(True)
-    # Создание объекта MedicalSurvey
-    add_medical_survey(survey1)  # Добавление объекта в базу данных
+    add_medical_survey(survey1)
     survey2 = get_medical_survey("123412341234")
     if survey2 is not None:
         survey2.print_fields()
